@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import MapView, { type MapMarker, type RouteFeature } from "@/components/MapView";
 import Icon from "@/components/Icon";
 import { Avatar, Sheet } from "@/components/ui";
@@ -64,6 +64,14 @@ export default function MapPage() {
     : Number(b.both_want) - Number(a.both_want) || b.priority_score - a.priority_score), [places.data, ui, order]);
 
   const selected = places.data?.find((p) => p.id === ui.selectedPlaceId) ?? null;
+  const dayObj = ui.day !== "all" ? it.data?.days.find((d) => d.day_number === ui.day) : undefined;
+  const dayGeo = useQuery({
+    queryKey: ["daygeo", tripId, dayObj?.id, dayObj?.version],
+    queryFn: () => api.get<{ features: { geometry: RouteFeature["geometry"] }[]; skipped: { from: string; to: string }[]; walk_distance_m: number }>(
+      `/api/trips/${tripId}/days/${dayObj!.id}/walk-geometry`),
+    enabled: !!dayObj, staleTime: 60_000,
+  });
+  const dayRoutes = useMemo<RouteFeature[]>(() => (dayGeo.data?.features ?? []).map((f) => ({ geometry: f.geometry, mode: "WALK" })), [dayGeo.data]);
   const ambient = useNearby(center?.lat, center?.lon, 500, ui.showStops && !detailOpen);
 
   const select = (p: Place, open = false) => {
@@ -107,7 +115,7 @@ export default function MapPage() {
 
   return (
     <div className="fixed inset-0 bottom-[calc(var(--nav-h)+var(--sab))]">
-      <MapView markers={markers} routes={routes} fit={fit} focus={focus} bottomPad={detailOpen ? 420 : 230}
+      <MapView markers={markers} routes={routes.length ? routes : dayRoutes} fit={fit} focus={focus} bottomPad={detailOpen ? 420 : 230}
         onSelect={(id, kind) => {
           if (kind === "place") { const p = places.data?.find((x) => x.id === id); if (p) select(p, detailOpen || p.id === ui.selectedPlaceId); }
           if (kind === "pick") setQuick((x) => x);
@@ -176,6 +184,10 @@ export default function MapPage() {
         <div className="flex flex-wrap gap-1.5 mt-1.5 max-w-[640px] mx-auto">
           {ui.showStops && !detailOpen && (
             <Pill>{center ? (ambient.isFetching ? "정류장 찾는 중…" : `반경 500m 정류장 ${ambient.data?.stops.length ?? 0}곳`) : "지도를 누르면 그 주변 정류장을 보여줘요"}</Pill>
+          )}
+          {dayObj && dayGeo.data && (
+            <Pill>🚶 DAY {dayObj.day_number} 도보 동선 {dayGeo.data.walk_distance_m >= 1000 ? `${(dayGeo.data.walk_distance_m / 1000).toFixed(1)}km` : `${dayGeo.data.walk_distance_m}m`}
+              {dayGeo.data.skipped.length ? ` · 대중교통 구간 ${dayGeo.data.skipped.length}` : ""}</Pill>
           )}
           {noLoc > 0 && <Pill>위치 미정 {noLoc}곳은 지도에 없어요</Pill>}
           {routes.length > 0 && (

@@ -13,7 +13,7 @@ from fastapi.responses import FileResponse, JSONResponse
 from sqlalchemy import text
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
-from .api import itinerary, places, rail, transit, trips
+from .api import itinerary, places, rail, together, transit, trips
 from .config import get_settings
 from .db import get_engine
 from .errors import AppError
@@ -98,7 +98,7 @@ async def http_error(_: Request, exc: StarletteHTTPException):
         "code": "NOT_FOUND" if exc.status_code == 404 else "HTTP_ERROR", "message": str(exc.detail)}})
 
 
-for r in (trips.router, places.router, itinerary.router, rail.router, transit.router):
+for r in (trips.router, places.router, itinerary.router, rail.router, transit.router, together.router):
     app.include_router(r)
 
 

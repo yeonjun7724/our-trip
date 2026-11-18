@@ -245,3 +245,39 @@ class ActivityLog(Base):
     action: Mapped[str] = mapped_column(String(30))
     summary: Mapped[str] = mapped_column(String(200))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)
+
+
+class Expense(Base):
+    """Shared trip expense, split equally among split_member_ids."""
+    __tablename__ = "expenses"
+    id: Mapped[str] = mapped_column(String(32), primary_key=True, default=_uuid)
+    trip_id: Mapped[str] = mapped_column(ForeignKey("trips.id", ondelete="CASCADE"), index=True)
+    title: Mapped[str] = mapped_column(String(80))
+    amount: Mapped[int] = mapped_column(Integer)  # KRW
+    category: Mapped[str] = mapped_column(String(16), default="ETC")
+    paid_by: Mapped[str | None] = mapped_column(ForeignKey("trip_members.id", ondelete="SET NULL"))
+    split_member_ids: Mapped[list] = mapped_column(JSON, default=list)
+    day_number: Mapped[int | None] = mapped_column(Integer)
+    created_by: Mapped[str | None] = mapped_column(ForeignKey("trip_members.id", ondelete="SET NULL"))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)
+
+
+class ChecklistItem(Base):
+    __tablename__ = "checklist_items"
+    id: Mapped[str] = mapped_column(String(32), primary_key=True, default=_uuid)
+    trip_id: Mapped[str] = mapped_column(ForeignKey("trips.id", ondelete="CASCADE"), index=True)
+    text: Mapped[str] = mapped_column(String(120))
+    group: Mapped[str] = mapped_column(String(16), default="PACK")  # PACK | TODO
+    done: Mapped[bool] = mapped_column(Boolean, default=False)
+    done_by: Mapped[str | None] = mapped_column(ForeignKey("trip_members.id", ondelete="SET NULL"))
+    created_by: Mapped[str | None] = mapped_column(ForeignKey("trip_members.id", ondelete="SET NULL"))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)
+
+
+class PlaceComment(Base):
+    __tablename__ = "place_comments"
+    id: Mapped[str] = mapped_column(String(32), primary_key=True, default=_uuid)
+    place_id: Mapped[str] = mapped_column(ForeignKey("places.id", ondelete="CASCADE"), index=True)
+    member_id: Mapped[str | None] = mapped_column(ForeignKey("trip_members.id", ondelete="SET NULL"))
+    text: Mapped[str] = mapped_column(String(500))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)

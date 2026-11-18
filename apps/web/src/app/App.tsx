@@ -13,6 +13,8 @@ const AddPlacePage = lazy(() => import("@/features/places/AddPlacePage"));
 const TransitPage = lazy(() => import("@/features/transit/TransitPage"));
 const ItineraryPage = lazy(() => import("@/features/itinerary/ItineraryPage"));
 const SettingsPage = lazy(() => import("@/features/settings/SettingsPage"));
+const ExpensesPage = lazy(() => import("@/features/together/ExpensesPage"));
+const ChecklistPage = lazy(() => import("@/features/together/ChecklistPage"));
 
 const NAV: { to: string; label: string; icon: IconName }[] = [
   { to: "/", label: "지도", icon: "map" },
@@ -108,6 +110,8 @@ export default function App() {
         <Route path="/transit" element={<Authed><TransitPage /></Authed>} />
         <Route path="/itinerary" element={<Authed><ItineraryPage /></Authed>} />
         <Route path="/settings" element={<Authed><SettingsPage /></Authed>} />
+        <Route path="/expenses" element={<Authed><ExpensesPage /></Authed>} />
+        <Route path="/checklist" element={<Authed><ChecklistPage /></Authed>} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>

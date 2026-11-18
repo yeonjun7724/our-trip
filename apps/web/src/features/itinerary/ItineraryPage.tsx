@@ -191,6 +191,19 @@ function DayView({ day }: { day: ItineraryDay }) {
         </ol>
       )}
       <InlineError error={write.error} />
+      {day.entries.length > 0 && (
+        <button className="btn btn-ghost w-full" onClick={async () => {
+          const lines = [`🗓️ DAY ${day.day_number} ${day.primary_city_label}${day.travel_date ? ` (${day.travel_date})` : ""}`];
+          day.entries.forEach((e) => {
+            if (e.leg_in?.duration_minutes != null) lines.push(`   ↓ ${MODE_LABEL[e.leg_in.mode] ?? "이동"} ${minutes(e.leg_in.duration_minutes)}`);
+            lines.push(e.kind === "RAIL" ? `🚆 ${e.departure ?? "--:--"} ${e.origin} → ${e.destination} (${e.name})` : `📍 ${e.start ?? "--:--"} ${e.name}`);
+          });
+          lines.push("— Our Trip");
+          const text = lines.join("\n");
+          if (navigator.share) { try { await navigator.share({ text }); return; } catch { /* cancelled */ } }
+          await navigator.clipboard?.writeText(text); toast("일정을 복사했어요. 카톡에 붙여 넣어 보세요");
+        }}><Icon name="share" size={18} />이 날 일정 공유</button>
+      )}
       {day.entries.length >= 3 && (
         <button className="btn btn-outline w-full" disabled={optimize.isPending} onClick={() => optimize.mutate()}>
           {optimize.isPending ? "계산 중…" : "✨ 도보 동선 최적화 추천"}

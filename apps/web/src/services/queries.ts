@@ -40,7 +40,7 @@ export const usePass = (id?: string) =>
 export function useInvalidateTrip() {
   const qc = useQueryClient();
   return () => {
-    ["trip", "places", "itinerary", "activity", "rail-res", "pass"].forEach((k) => qc.invalidateQueries({ queryKey: [k] }));
+    ["trip", "places", "itinerary", "activity", "rail-res", "pass", "expenses", "checklist", "comments", "daygeo"].forEach((k) => qc.invalidateQueries({ queryKey: [k] }));
   };
 }
 

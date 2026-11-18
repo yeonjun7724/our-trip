@@ -11,6 +11,7 @@ import type { RouteFeature } from "@/components/MapView";
 import LocationPicker from "@/components/LocationPicker";
 import NearbyStops from "@/features/transit/NearbyStops";
 import TransitResults, { TransitSearchButton } from "@/features/transit/TransitResults";
+import Comments from "./Comments";
 
 interface WalkRes {
   status: string; distance_m: number | null; duration_minutes: number | null; warnings: string[];
@@ -177,6 +178,8 @@ export default function PlaceDetail({ place, onRoute, onStops, onDeleted }: {
           {showStops && <NearbyStops lat={dest.lat} lon={dest.lon} onStops={onStops} />}
         </section>
       )}
+
+      <Comments placeId={place.id} memberIdx={midx} />
 
       <section>
         <h3 className="font-bold mb-2">여행 메모</h3>

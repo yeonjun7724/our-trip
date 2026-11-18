@@ -3,6 +3,9 @@ import Icon from "@/components/Icon";
 import { Avatar, EmptyState, ErrorState, ListSkeleton, Notice } from "@/components/ui";
 import { useActivity, useItinerary, usePass, usePlaces, useReservations, useTrip, useTripId } from "@/services/queries";
 import { ago, CITY_COLOR, dday, hm, md, todayKST } from "@/services/format";
+import WeatherCard from "@/features/together/Weather";
+import { useExpenses } from "@/features/together/ExpensesPage";
+import { useChecklist } from "@/features/together/ChecklistPage";
 
 export default function HomePage() {
   const tripId = useTripId();
@@ -12,6 +15,8 @@ export default function HomePage() {
   const act = useActivity(tripId);
   const pass = usePass(tripId);
   const places = usePlaces(tripId);
+  const money = useExpenses(tripId).data;
+  const checklist = useChecklist(tripId).data ?? [];
 
   if (trip.isLoading) return <div className="page"><ListSkeleton rows={4} /></div>;
   if (trip.error) return <div className="page"><ErrorState error={trip.error} retry={() => trip.refetch()} /></div>;
@@ -62,11 +67,26 @@ export default function HomePage() {
 
       {/* quick actions */}
       <div className="grid grid-cols-4 gap-2">
-        {([["map", "지도", "/"], ["heart", "위시", "/wishlist"], ["train", "열차", "/transit"], ["bus", "정류장", "/transit?tab=stops"]] as const).map(([i, l, to]) => (
+        {([["heart", "위시", "/wishlist"], ["train", "열차", "/transit"], ["sparkle", "가계부", "/expenses"], ["check", "체크리스트", "/checklist"]] as const).map(([i, l, to]) => (
           <Link key={l} to={to} className="card py-3 flex flex-col items-center gap-1 text-xs font-semibold active:bg-sand">
             <span className="w-10 h-10 rounded-2xl bg-coral-soft text-coral flex items-center justify-center"><Icon name={i} /></span>{l}
           </Link>
         ))}
+      </div>
+
+      <WeatherCard days={t.days} />
+
+      <div className="grid grid-cols-2 gap-3">
+        <Link to="/expenses" className="card p-4 block">
+          <p className="text-xs text-muted font-semibold">💸 같이 쓴 돈</p>
+          <p className="font-extrabold text-lg mt-1">{(money?.total ?? 0).toLocaleString("ko-KR")}원</p>
+          <p className="text-xs text-navy-soft mt-0.5 truncate">{money?.transfers[0] ? `${money.transfers[0].from_name} → ${money.transfers[0].to_name} ${money.transfers[0].amount.toLocaleString("ko-KR")}원` : "정산할 금액 없음"}</p>
+        </Link>
+        <Link to="/checklist" className="card p-4 block">
+          <p className="text-xs text-muted font-semibold">🎒 준비</p>
+          <p className="font-extrabold text-lg mt-1">{checklist.filter((c) => c.done).length} / {checklist.length}</p>
+          <div className="h-1.5 rounded-full bg-sand mt-2 overflow-hidden"><div className="h-full bg-coral rounded-full" style={{ width: `${checklist.length ? (checklist.filter((c) => c.done).length / checklist.length) * 100 : 0}%` }} /></div>
+        </Link>
       </div>
 
       {/* today */}
