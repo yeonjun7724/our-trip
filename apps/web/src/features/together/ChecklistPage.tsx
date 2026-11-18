@@ -34,19 +34,19 @@ export default function ChecklistPage() {
     <div className="page space-y-4">
       <Header title="체크리스트" sub="둘이 같이 보는 준비물 · 할 일" />
       <Segmented value={group} onChange={setGroup} options={[{ value: "PACK", label: "🎒 준비물" }, { value: "TODO", label: "✅ 할 일" }]} />
-      <section className="card p-4 flex items-center gap-4">
+      <section className="card p-5 flex items-center gap-4">
         <div className="relative w-16 h-16 shrink-0">
           <svg viewBox="0 0 36 36" className="w-16 h-16 -rotate-90"><circle cx="18" cy="18" r="15.5" fill="none" stroke="var(--color-sand)" strokeWidth="4" />
             <circle cx="18" cy="18" r="15.5" fill="none" stroke="var(--color-coral)" strokeWidth="4" strokeLinecap="round"
               strokeDasharray={`${(pct / 100) * 97.4} 97.4`} style={{ transition: "stroke-dasharray .4s" }} /></svg>
-          <span className="absolute inset-0 flex items-center justify-center font-extrabold text-sm">{pct}%</span>
+          <span className="absolute inset-0 flex items-center justify-center font-bold text-sm">{pct}%</span>
         </div>
         <div className="flex-1"><p className="font-bold">{items.length ? `${items.length}개 중 ${done}개 완료` : "아직 항목이 없어요"}</p>
           <p className="text-sm text-muted">{pct === 100 && items.length ? "준비 끝! 떠나기만 하면 돼요 🎉" : "체크하면 상대 화면에도 바로 보여요"}</p></div>
       </section>
       <form className="flex gap-2" onSubmit={(e) => { e.preventDefault(); if (text.trim()) add.mutate([{ text: text.trim(), group }]); }}>
-        <input className="field flex-1 !rounded-2xl" maxLength={120} placeholder={group === "PACK" ? "챙길 것 추가" : "할 일 추가"} value={text} onChange={(e) => setText(e.target.value)} aria-label="항목 추가" />
-        <button className="btn btn-primary !rounded-2xl" disabled={!text.trim() || add.isPending}><Icon name="plus" size={18} /></button>
+        <input className="field flex-1 !rounded-[14px]" maxLength={120} placeholder={group === "PACK" ? "챙길 것 추가" : "할 일 추가"} value={text} onChange={(e) => setText(e.target.value)} aria-label="항목 추가" />
+        <button className="btn btn-primary !rounded-[14px]" disabled={!text.trim() || add.isPending}><Icon name="plus" size={18} /></button>
       </form>
       {q.isLoading && <ListSkeleton rows={3} />}
       {q.error && <ErrorState error={q.error} retry={() => q.refetch()} />}

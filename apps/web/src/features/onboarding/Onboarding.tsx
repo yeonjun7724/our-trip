@@ -26,7 +26,7 @@ export function IdentityGate() {
       <div className="absolute inset-x-0 top-0 px-5 pointer-events-none" style={{ paddingTop: "calc(var(--sat) + 28px)" }}>
         <div className="max-w-[520px] mx-auto flex items-center gap-2.5">
           <img src="/icons/icon.svg" alt="" className="w-10 h-10 rounded-xl shadow-float" />
-          <span className="font-extrabold text-[22px] tracking-tight">Our Trip</span>
+          <span className="font-bold text-[22px] tracking-tight">Our Trip</span>
         </div>
       </div>
       <div className="absolute inset-x-0 bottom-0 p-3" style={{ paddingBottom: "calc(var(--sab) + 14px)" }}>
@@ -36,7 +36,7 @@ export function IdentityGate() {
           {info.data && (
             <>
               <p className="text-[13px] font-bold text-coral tracking-wide">{info.data.trip_title}</p>
-              <h1 className="text-[26px] leading-tight font-extrabold tracking-[-0.02em] mt-1">
+              <h1 className="text-[26px] leading-tight font-bold tracking-[-0.02em] mt-1">
                 {info.data.members.length ? "다시 왔네요! 누구세요?" : "둘이 함께 만드는\n기차여행 지도".split("\n").map((l, i) => <span key={i} className="block">{l}</span>)}
               </h1>
               {!info.data.members.length && <p className="text-[14px] text-navy-soft mt-1.5">가고 싶은 곳을 지도에 찍고, 같이 투표하고, 걷는 길과 열차까지 한 번에.</p>}
@@ -47,7 +47,7 @@ export function IdentityGate() {
                 <div className="grid grid-cols-2 gap-2 mt-4 max-h-[34dvh] overflow-y-auto overscroll-contain p-0.5 -m-0.5">
                   {info.data.members.map((m, i) => (
                     <button key={m.id} disabled={blocked} onClick={() => go.mutate({ member_id: m.id })}
-                      className="card !rounded-2xl p-3 flex items-center gap-2.5 text-left disabled:opacity-50">
+                      className="card !rounded-[14px] p-3 flex items-center gap-2.5 text-left disabled:opacity-50">
                       <Avatar name={m.nickname} index={i} size={38} />
                       <span className="font-bold truncate flex-1">{m.nickname}</span>
                       <Icon name="chevronR" size={18} className="text-muted" />
@@ -56,9 +56,9 @@ export function IdentityGate() {
                 </div>
               )}
               <form className="flex gap-2 mt-3" onSubmit={(e) => { e.preventDefault(); if (name.trim()) go.mutate({ nickname: name.trim() }); }}>
-                <input className="field flex-1 !min-h-12 !rounded-2xl" maxLength={40} placeholder={info.data.members.length ? "처음이면 이름 입력" : "내 이름 (예: 연준)"}
+                <input className="field flex-1 !min-h-12 !rounded-[14px]" maxLength={40} placeholder={info.data.members.length ? "처음이면 이름 입력" : "내 이름 (예: 연준)"}
                   value={name} onChange={(e) => setName(e.target.value)} aria-label="이름" />
-                <button className="btn btn-primary shrink-0 !min-h-12 !rounded-2xl px-5" disabled={!name.trim() || blocked}>시작</button>
+                <button className="btn btn-primary shrink-0 !min-h-12 !rounded-[14px] px-5" disabled={!name.trim() || blocked}>시작</button>
               </form>
               <InlineError error={go.error} />
             </>

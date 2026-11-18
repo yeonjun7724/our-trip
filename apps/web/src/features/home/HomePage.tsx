@@ -37,39 +37,46 @@ export default function HomePage() {
   const idx = Object.fromEntries(t.members.map((m, i) => [m.id, i]));
 
   return (
-    <div className="page space-y-4">
+    <div className="page space-y-3">
+      {/* header */}
+      <header className="flex items-center gap-2 -mb-1">
+        <p className="flex-1 text-[15px] font-semibold text-navy-soft">{t.start_date ? `${md(t.start_date)} 출발` : "날짜 미정"}</p>
+        <Link to="/settings" className="tap rounded-full text-muted active:bg-line flex items-center justify-center" aria-label="여행 설정"><Icon name="settings" /></Link>
+      </header>
+
       {/* hero */}
-      <section className="hero-grad rounded-[28px] p-5 text-white shadow-float relative overflow-hidden">
-        <div className="absolute -right-6 -top-6 w-32 h-32 rounded-full bg-white/15" aria-hidden />
-        <div className="absolute right-10 bottom-[-30px] w-20 h-20 rounded-full bg-white/10" aria-hidden />
-        <div className="flex items-start gap-3 relative">
-          <div className="flex-1 min-w-0">
-            <p className="text-sm text-white/85">{t.start_date ? `${md(t.start_date)} 출발` : "날짜 미정 · 설정에서 정할 수 있어요"}</p>
-            <h1 className="text-[26px] leading-tight font-extrabold mt-0.5">{t.title}</h1>
-          </div>
-          <Link to="/settings" className="tap rounded-full bg-white/20 flex items-center justify-center" aria-label="여행 설정"><Icon name="settings" /></Link>
+      <section className="card p-6">
+        <div className="flex items-start gap-3">
+          <h1 className="flex-1 min-w-0 text-[24px] leading-[1.3] font-bold tracking-[-0.03em]">{t.title}</h1>
+          {dday(t.start_date) && <span className="shrink-0 rounded-[10px] bg-coral-soft text-[#1B64DA] font-bold text-[15px] px-3 py-1.5">{dday(t.start_date)}</span>}
         </div>
-        <div className="flex items-end gap-3 mt-4 relative">
-          <div className="flex -space-x-2 shrink-0">
-            {t.members.slice(0, 4).map((m, i) => <Avatar key={m.id} name={m.nickname} index={i} size={34} ring />)}
-            {t.members.length > 4 && <span className="w-[34px] h-[34px] rounded-full bg-white/30 ring-2 ring-paper text-xs font-bold flex items-center justify-center">+{t.members.length - 4}</span>}
+        <div className="flex items-center gap-2.5 mt-3">
+          <div className="flex -space-x-1.5 shrink-0">
+            {t.members.slice(0, 4).map((m, i) => <Avatar key={m.id} name={m.nickname} index={i} size={28} ring />)}
+            {t.members.length > 4 && <span className="w-7 h-7 rounded-full bg-sand ring-2 ring-paper text-xs font-bold flex items-center justify-center">+{t.members.length - 4}</span>}
           </div>
-          <span className="text-sm text-white/90 min-w-0 flex-1 truncate">{t.members.map((m) => m.nickname).join(" · ") || "아직 아무도 없어요"}</span>
-          {dday(t.start_date) && <span className="ml-auto rounded-full bg-white text-coral font-extrabold px-3 py-1">{dday(t.start_date)}</span>}
+          <span className="text-[15px] text-navy-soft min-w-0 flex-1 truncate">{t.members.map((m) => m.nickname).join(", ") || "아직 아무도 없어요"}</span>
         </div>
-        <div className="mt-4 relative">
-          <div className="flex justify-between text-xs text-white/90 mb-1"><span>방문 {visited} / 일정 {placeEntries.length}곳</span><span>💕 둘 다 원하는 곳 {both}</span></div>
-          <div className="h-2 rounded-full bg-white/25 overflow-hidden">
-            <div className="h-full bg-white rounded-full transition-all" style={{ width: `${placeEntries.length ? (visited / placeEntries.length) * 100 : 0}%` }} />
+        <div className="mt-6 grid grid-cols-2 gap-3">
+          <div className="rounded-[16px] bg-sand px-4 py-3.5">
+            <p className="text-[13px] text-muted">방문한 곳</p>
+            <p className="text-[20px] font-bold mt-0.5">{visited}<span className="text-[15px] text-muted font-semibold"> / {placeEntries.length}곳</span></p>
           </div>
+          <div className="rounded-[16px] bg-sand px-4 py-3.5">
+            <p className="text-[13px] text-muted">둘 다 원하는 곳</p>
+            <p className="text-[20px] font-bold mt-0.5">{both}<span className="text-[15px] text-muted font-semibold">곳 💕</span></p>
+          </div>
+        </div>
+        <div className="h-2 rounded-full bg-sand overflow-hidden mt-4">
+          <div className="h-full bg-coral rounded-full transition-all duration-500" style={{ width: `${placeEntries.length ? (visited / placeEntries.length) * 100 : 0}%` }} />
         </div>
       </section>
 
       {/* quick actions */}
-      <div className="grid grid-cols-4 gap-2">
+      <div className="card grid grid-cols-4 py-4 px-2">
         {([["heart", "위시", "/wishlist"], ["train", "열차", "/transit"], ["sparkle", "가계부", "/expenses"], ["check", "체크리스트", "/checklist"]] as const).map(([i, l, to]) => (
-          <Link key={l} to={to} className="card py-3 flex flex-col items-center gap-1 text-xs font-semibold active:bg-sand">
-            <span className="w-10 h-10 rounded-2xl bg-coral-soft text-coral flex items-center justify-center"><Icon name={i} /></span>{l}
+          <Link key={l} to={to} className="py-1 flex flex-col items-center gap-2 text-[13px] font-medium text-navy-soft rounded-[14px] active:bg-sand transition-colors">
+            <span className="w-12 h-12 rounded-[16px] bg-coral-soft text-coral flex items-center justify-center"><Icon name={i} size={24} /></span>{l}
           </Link>
         ))}
       </div>
@@ -77,23 +84,23 @@ export default function HomePage() {
       <WeatherCard days={t.days} />
 
       <div className="grid grid-cols-2 gap-3">
-        <Link to="/expenses" className="card p-4 block">
-          <p className="text-xs text-muted font-semibold">💸 같이 쓴 돈</p>
-          <p className="font-extrabold text-lg mt-1">{(money?.total ?? 0).toLocaleString("ko-KR")}원</p>
+        <Link to="/expenses" className="card p-5 block">
+          <p className="text-[13px] text-muted font-medium">💸 같이 쓴 돈</p>
+          <p className="font-bold text-[20px] mt-1">{(money?.total ?? 0).toLocaleString("ko-KR")}원</p>
           <p className="text-xs text-navy-soft mt-0.5 truncate">{money?.transfers[0] ? `${money.transfers[0].from_name} → ${money.transfers[0].to_name} ${money.transfers[0].amount.toLocaleString("ko-KR")}원` : "정산할 금액 없음"}</p>
         </Link>
-        <Link to="/checklist" className="card p-4 block">
-          <p className="text-xs text-muted font-semibold">🎒 준비</p>
-          <p className="font-extrabold text-lg mt-1">{checklist.filter((c) => c.done).length} / {checklist.length}</p>
+        <Link to="/checklist" className="card p-5 block">
+          <p className="text-[13px] text-muted font-medium">🎒 준비</p>
+          <p className="font-bold text-lg mt-1">{checklist.filter((c) => c.done).length} / {checklist.length}</p>
           <div className="h-1.5 rounded-full bg-sand mt-2 overflow-hidden"><div className="h-full bg-coral rounded-full" style={{ width: `${checklist.length ? (checklist.filter((c) => c.done).length / checklist.length) * 100 : 0}%` }} /></div>
         </Link>
       </div>
 
       {/* today */}
-      <section className="card p-4">
+      <section className="card p-5">
         <div className="flex items-center gap-2">
           <span className="w-2.5 h-2.5 rounded-full" style={{ background: focusDay ? CITY_COLOR[focusDay.primary_city] : "#ccc" }} />
-          <h2 className="font-bold flex-1">{todayDay ? "오늘" : "첫날 미리보기"} · {focusDay ? `DAY ${focusDay.day_number} ${focusDay.primary_city_label}` : "–"}</h2>
+          <h2 className="text-[18px] font-bold tracking-[-0.02em] flex-1">{todayDay ? "오늘" : "첫날 미리보기"} · {focusDay ? `DAY ${focusDay.day_number} ${focusDay.primary_city_label}` : "–"}</h2>
           <Link to="/itinerary" className="text-sm text-coral font-semibold min-h-11 flex items-center">전체<Icon name="chevronR" size={16} /></Link>
         </div>
         {it.isLoading ? <div className="skeleton h-16 mt-3" /> : focusDay && focusDay.entries.length ? (
@@ -111,12 +118,12 @@ export default function HomePage() {
       </section>
 
       <div className="grid grid-cols-2 gap-3">
-        <section className="card p-4">
+        <section className="card p-5">
           <p className="text-xs text-muted font-semibold flex items-center gap-1"><Icon name="pin" size={14} />다음 방문</p>
           <p className="font-bold mt-1 truncate">{nextPlace?.name ?? "–"}</p>
           <p className="text-xs text-navy-soft mt-0.5">{nextPlace?.start ? `${nextPlace.start} 예정 (추정)` : nextPlace ? "시간 미확인" : ""}</p>
         </section>
-        <section className="card p-4">
+        <section className="card p-5">
           <p className="text-xs text-muted font-semibold flex items-center gap-1"><Icon name="train" size={14} />다음 열차</p>
           {nextTrain ? (
             <>
@@ -127,18 +134,18 @@ export default function HomePage() {
         </section>
       </div>
 
-      <Link to="/transit?tab=mine" className="card p-4 block">
-        <div className="flex items-center"><h2 className="font-bold flex-1">철도 예약 · 내일로</h2><Icon name="chevronR" className="text-muted" /></div>
+      <Link to="/transit?tab=mine" className="card p-5 block">
+        <div className="flex items-center"><h2 className="text-[18px] font-bold tracking-[-0.02em] flex-1">철도 예약 · 내일로</h2><Icon name="chevronR" className="text-muted" /></div>
         <div className="flex gap-2 mt-2 text-sm">
-          <span className="chip bg-[#E9F5EE] text-ok">예매 완료 {reserved}</span>
-          <span className={`chip ${planned ? "bg-[#FFF4E0] text-warn" : "bg-sand"}`}>예매 전 {planned}</span>
+          <span className="chip bg-[#E5F8EF] text-ok">예매 완료 {reserved}</span>
+          <span className={`chip ${planned ? "bg-[#FFF3E0] text-warn" : "bg-sand"}`}>예매 전 {planned}</span>
           {pass.data && <span className="chip bg-sand">탑승일 {pass.data.rail_day_count}{pass.data.allowed_days ? `/${pass.data.allowed_days}` : ""}일</span>}
         </div>
         {pass.data?.warnings.map((w) => <div className="mt-2" key={w}><Notice tone="warn">{w}</Notice></div>)}
       </Link>
 
       <section>
-        <h2 className="font-bold mb-2">최근 활동</h2>
+        <h2 className="text-[18px] font-bold tracking-[-0.02em] mb-3 px-1">최근 활동</h2>
         {act.isLoading ? <ListSkeleton rows={2} /> : act.data?.length ? (
           <ul className="card divide-y divide-line">
             {act.data.slice(0, 8).map((a) => {

@@ -60,7 +60,7 @@ export default function TransitResults({ result, onShow, onPick, pickLabel }: {
       <Segmented size="sm" value={sort} onChange={setSort}
         options={[{ value: "time", label: "소요시간" }, { value: "transfers", label: "환승 적은" }, { value: "walk", label: "도보 적은" }]} />
       {opts.map((o) => (
-        <div key={o.option_id} className="card p-3">
+        <div key={o.option_id} className="card p-4">
           <div className="flex items-baseline gap-2">
             <b className="text-lg">{minutes(o.total_minutes)}</b>
             <span className="text-sm text-navy-soft">환승 {o.transfer_count ?? "–"}회 · 도보 {km(o.walk_distance_m)}{o.fare_krw != null ? ` · ${o.fare_krw.toLocaleString()}원` : ""}</span>

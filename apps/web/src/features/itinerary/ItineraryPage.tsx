@@ -10,13 +10,13 @@ import Icon, { type IconName } from "@/components/Icon";
 import { toast } from "@/components/Toast";
 
 const CONN_STYLE: Record<string, string> = {
-  LIKELY_OK: "bg-[#E9F5EE] text-ok", BUFFER_SHORT: "bg-[#FFF4E0] text-warn", MISSED: "bg-[#FDE8E6] text-bad",
+  LIKELY_OK: "bg-[#E5F8EF] text-ok", BUFFER_SHORT: "bg-[#FFF3E0] text-warn", MISSED: "bg-[#FFEEF0] text-bad",
   UNVERIFIED: "bg-line text-navy-soft", TIMETABLE_UNVERIFIED: "bg-line text-navy-soft", INSUFFICIENT_DATA: "bg-line text-muted",
 };
 
 const MODE_STYLE: Record<string, { icon: IconName; color: string }> = {
-  WALK: { icon: "walk", color: "#2F6FDE" }, TRANSIT: { icon: "bus", color: "#E8833A" }, BUS: { icon: "bus", color: "#E8833A" },
-  SUBWAY: { icon: "route", color: "#7B5CC4" }, TRAIN: { icon: "train", color: "#1E2A44" }, UNKNOWN: { icon: "route", color: "#A3A9B6" },
+  WALK: { icon: "walk", color: "#3182F6" }, TRANSIT: { icon: "bus", color: "#E8833A" }, BUS: { icon: "bus", color: "#E8833A" },
+  SUBWAY: { icon: "route", color: "#7B5CC4" }, TRAIN: { icon: "train", color: "#333D4B" }, UNKNOWN: { icon: "route", color: "#B0B8C1" },
 };
 
 /** Connector between two timeline nodes: mode, duration, source, and an action to fill unknown legs. */
@@ -24,7 +24,7 @@ function LegRow({ leg, onTransit }: { leg: Leg; onTransit?: () => void }) {
   const known = leg.duration_minutes != null;
   const st = MODE_STYLE[leg.mode] ?? MODE_STYLE.UNKNOWN;
   const line = !known
-    ? "repeating-linear-gradient(#C9CED8 0 4px, transparent 4px 8px)"
+    ? "repeating-linear-gradient(#D1D6DB 0 4px, transparent 4px 8px)"
     : leg.mode === "WALK" ? `repeating-linear-gradient(${st.color} 0 3px, transparent 3px 7px)` : `linear-gradient(${st.color}, ${st.color})`;
   return (
     <div className="flex items-stretch gap-3 min-h-12">
@@ -78,7 +78,7 @@ function Entry({ e, prev, idx, count, onMove, onRemove, onTransit }: {
             visited ? "bg-ok border-ok text-white" : rail ? "bg-navy border-navy text-white" : "bg-paper border-coral"}`}>
           {visited ? <Icon name="check" size={14} stroke={3} /> : rail ? <Icon name="train" size={12} /> : null}
         </button>
-        <div className={`flex-1 min-w-0 card p-3 transition-opacity ${visited ? "opacity-60" : ""} ${rail ? "!bg-[#F2F5FB] !border-navy/25" : ""}`}>
+        <div className={`flex-1 min-w-0 card p-4 transition-opacity ${visited ? "opacity-60" : ""} ${rail ? "!bg-[#F9FAFB] ring-1 ring-line" : ""}`}>
           <div className="flex items-start gap-2">
             <p className={`font-bold flex-1 min-w-0 ${visited ? "line-through" : ""}`}>{rail ? e.name : `${CATEGORY_ICON[e.category ?? ""] ?? "📍"} ${e.name}`}</p>
             <button className="tap -m-2 flex items-center justify-center text-muted" aria-label="더보기" aria-expanded={menu} onClick={() => setMenu(!menu)}><Icon name="menu" size={18} /></button>
@@ -98,8 +98,8 @@ function Entry({ e, prev, idx, count, onMove, onRemove, onTransit }: {
               <div className="flex flex-wrap gap-1 mt-1">
                 <span className="chip bg-sand text-navy-soft"><Icon name="clock" size={12} /> {minutes(e.stay_minutes)}</span>
                 {e.is_fixed && <span className="chip bg-navy text-white">📌 {e.start} 고정</span>}
-                {!e.has_location && <span className="chip bg-[#FFF4E0] text-warn">위치 미정</span>}
-                {e.start && !e.is_fixed && <span className="chip bg-[#FFF4E0] text-warn">추정 시각</span>}
+                {!e.has_location && <span className="chip bg-[#FFF3E0] text-warn">위치 미정</span>}
+                {e.start && !e.is_fixed && <span className="chip bg-[#FFF3E0] text-warn">추정 시각</span>}
               </div>
               {e.conflict && <p className="text-xs text-bad mt-1">⚠ {e.conflict}</p>}
             </>
@@ -169,7 +169,7 @@ function DayView({ day }: { day: ItineraryDay }) {
 
   return (
     <div className="space-y-3">
-      <div className="card p-3 grid grid-cols-2 gap-2">
+      <div className="card p-4 grid grid-cols-2 gap-2">
         <label className="text-xs text-muted">출발 시각
           <input type="time" className="field !min-h-10" defaultValue={day.start_time} onBlur={(e) => e.target.value !== day.start_time && dayPatch.mutate({ start_time: e.target.value })} /></label>
         <label className="text-xs text-muted">출발 숙소
@@ -271,11 +271,11 @@ export default function ItineraryPage() {
 
       <section className="mt-8">
         <div className="flex items-center justify-between mb-2">
-          <h2 className="font-bold">미배정 장소 {data.unassigned.length}</h2>
+          <h2 className="text-[18px] font-bold tracking-[-0.02em]">미배정 장소 {data.unassigned.length}</h2>
           {data.unassigned.length > 0 && <button className="text-sm text-coral font-semibold min-h-11" onClick={() => suggest.mutate()}>날짜 추천 받기</button>}
         </div>
         {sugg && (
-          <div className="card p-3 mb-3 space-y-2">
+          <div className="card p-4 mb-3 space-y-2">
             <p className="text-sm font-semibold">추천 (승인한 것만 반영돼요)</p>
             {sugg.length === 0 && <p className="text-sm text-muted">추천할 장소가 없어요.</p>}
             {sugg.map((s) => (
@@ -288,7 +288,7 @@ export default function ItineraryPage() {
         )}
         <ul className="space-y-2">
           {data.unassigned.map((p) => (
-            <li key={p.id} className="card p-3 flex items-center gap-2">
+            <li key={p.id} className="card p-4 flex items-center gap-2">
               <span className="flex-1 min-w-0"><b className="truncate block">{CATEGORY_ICON[p.category]} {p.name}</b><span className="text-xs text-muted">{p.city_label} · 점수 {p.priority_score}{p.both_want ? " · 둘 다" : ""}</span></span>
               {day && <button className="btn btn-ghost !min-h-10 text-sm shrink-0" onClick={() => addTo.mutate({ dayId: day.id, placeId: p.id })}>DAY {day.day_number}에 넣기</button>}
             </li>

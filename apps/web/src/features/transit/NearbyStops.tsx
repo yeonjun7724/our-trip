@@ -91,7 +91,7 @@ export default function NearbyStops({ lat, lon, onStops, onSelectStop }: {
           const realtime = s.sources.some((x) => x.provider === "TAGO" && x.realtime_supported === true);
           const unknownRt = s.sources.some((x) => x.provider === "TAGO" && x.realtime_supported === null);
           return (
-            <div key={s.key} className="card p-3">
+            <div key={s.key} className="card p-4">
               <button className="w-full text-left flex gap-3 items-start" onClick={() => { setOpen(open === s.key ? null : s.key); onSelectStop?.(s); }}>
                 <span className="text-xl" aria-hidden>{KIND_ICON[s.kind]}</span>
                 <span className="flex-1 min-w-0">
@@ -104,7 +104,7 @@ export default function NearbyStops({ lat, lon, onStops, onSelectStop }: {
                   <span className="flex flex-wrap gap-1 mt-1">
                     {s.walk_status === "OK" && <SourceBadge status="ESTIMATED" provider="OSMNX" />}
                     {s.sources.map((x) => <span key={x.provider + x.stop_id} className="chip bg-sand text-navy-soft">{x.provider} {x.stop_id}</span>)}
-                    {s.kind === "BUS" && <span className={`chip ${realtime ? "bg-[#E9F5EE] text-ok" : "bg-line text-muted"}`}>
+                    {s.kind === "BUS" && <span className={`chip ${realtime ? "bg-[#E5F8EF] text-ok" : "bg-line text-muted"}`}>
                       {realtime ? "실시간 도착정보" : unknownRt ? "실시간 지원 미확인" : "실시간 없음"}</span>}
                   </span>
                 </span>

@@ -26,8 +26,8 @@ function TripForm({ trip }: { trip: Trip }) {
   const set = (k: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
     setF({ ...f, [k]: e.target.type === "number" || e.target.type === "range" ? Number(e.target.value) : e.target.value });
   return (
-    <form className="card p-4 space-y-3" onSubmit={(e) => { e.preventDefault(); save.mutate(undefined); }}>
-      <h2 className="font-bold">여행 정보</h2>
+    <form className="card p-5 space-y-3" onSubmit={(e) => { e.preventDefault(); save.mutate(undefined); }}>
+      <h2 className="text-[18px] font-bold tracking-[-0.02em]">여행 정보</h2>
       <div><label className="label" htmlFor="st">여행 이름</label><input id="st" className="field" value={f.title} onChange={set("title")} /></div>
       <div className="grid grid-cols-2 gap-3">
         <div><label className="label" htmlFor="ssd">시작일</label><input id="ssd" type="date" className="field" value={f.start_date} onChange={set("start_date")} /></div>
@@ -59,8 +59,8 @@ function ShareApp({ trip }: { trip: Trip }) {
     await navigator.clipboard?.writeText(url); setDone(true);
   };
   return (
-    <div className="card p-4 space-y-2" id="invite">
-      <h2 className="font-bold">같이 쓰기</h2>
+    <div className="card p-5 space-y-2" id="invite">
+      <h2 className="text-[18px] font-bold tracking-[-0.02em]">같이 쓰기</h2>
       <p className="text-sm text-navy-soft">참여자: {trip.members.map((m) => `${m.nickname}${m.is_me ? "(나)" : ""}`).join(", ")}</p>
       <p className="text-sm">이 주소를 보내면 열자마자 지도가 뜨고, 이름만 고르면 함께 편집할 수 있어요.</p>
       <p className="text-xs font-mono bg-sand rounded-lg p-2 break-all select-all" data-testid="app-url">{url}</p>
@@ -74,8 +74,8 @@ function Providers() {
   if (q.isLoading) return <ListSkeleton rows={1} />;
   if (q.error) return <ErrorState error={q.error} />;
   return (
-    <div className="card p-4 space-y-2">
-      <h2 className="font-bold">데이터 연결 상태</h2>
+    <div className="card p-5 space-y-2">
+      <h2 className="text-[18px] font-bold tracking-[-0.02em]">데이터 연결 상태</h2>
       {q.data!.providers.map((p) => (
         <div key={p.provider} className="flex items-start gap-2 text-sm">
           <span className={`w-2 h-2 rounded-full mt-1.5 ${p.state === "VERIFIED" ? "bg-ok" : p.state === "NOT_CONFIGURED" ? "bg-line" : p.state === "AUTH_FAILED" ? "bg-bad" : "bg-warn"}`} />
@@ -107,7 +107,7 @@ export default function SettingsPage() {
       <Providers />
       <p className="text-xs text-muted">여행방 ID: <span className="font-mono select-all">{trip.data!.id}</span></p>
       <button className="btn btn-outline w-full" onClick={() => logout.mutate()}>이 기기에서 나가기</button>
-      <p className="text-[11px] text-muted">지도 © OpenFreeMap · © OpenMapTiles · © OpenStreetMap contributors</p>
+      <p className="text-[11px] text-muted">지도 © OpenStreetMap contributors</p>
     </div>
   );
 }

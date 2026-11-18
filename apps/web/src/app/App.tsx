@@ -29,11 +29,9 @@ function BottomNav() {
   const item = (n: (typeof NAV)[number]) => (
     <li key={n.to}>
       <NavLink to={n.to} end={n.to === "/"}
-        className={({ isActive }) => `h-full flex flex-col items-center justify-center gap-0.5 text-[11px] font-semibold transition-colors ${isActive ? "text-coral" : "text-muted"}`}>
+        className={({ isActive }) => `h-full flex flex-col items-center justify-center gap-1 text-[11px] font-medium transition-colors active:scale-95 ${isActive ? "text-navy" : "text-[#B0B8C1]"}`}>
         {({ isActive }) => (<>
-          <span className={`flex items-center justify-center w-12 h-7 rounded-full transition-colors ${isActive ? "bg-coral-soft" : ""}`}>
-            <Icon name={n.icon} size={22} stroke={isActive ? 2.4 : 1.9} />
-          </span>
+          <Icon name={n.icon} size={24} stroke={isActive ? 2.3 : 2} />
           {n.label}
         </>)}
       </NavLink>
@@ -41,29 +39,29 @@ function BottomNav() {
   );
   return (
     <>
-      <nav className="fixed bottom-0 inset-x-0 z-30 glass border-t border-line" style={{ paddingBottom: "var(--sab)" }} aria-label="주요 메뉴">
+      <nav className="fixed bottom-0 inset-x-0 z-30 bg-paper/95 backdrop-blur-xl border-t border-line rounded-t-[20px] shadow-[0_-2px_16px_rgba(0,0,0,.04)]" style={{ paddingBottom: "var(--sab)" }} aria-label="주요 메뉴">
         <ul className="grid grid-cols-5 max-w-[640px] mx-auto h-[var(--nav-h)]">
           {item(NAV[0])}{item(NAV[1])}
           <li className="flex items-center justify-center">
             <button onClick={() => setAddOpen(true)} aria-label="장소 추가"
-              className="w-14 h-14 -mt-6 rounded-full bg-coral text-white shadow-float flex items-center justify-center active:scale-95 transition-transform ring-4 ring-ivory">
-              <Icon name="plus" size={28} stroke={2.6} />
+              className="w-12 h-12 rounded-[16px] bg-coral text-white shadow-[0_4px_12px_rgba(49,130,246,.35)] flex items-center justify-center active:scale-95 active:bg-[#1B64DA] transition-transform">
+              <Icon name="plus" size={26} stroke={2.6} />
             </button>
           </li>
           {item(NAV[2])}{item(NAV[3])}
         </ul>
       </nav>
       <Sheet open={addOpen} onClose={() => setAddOpen(false)} title="장소 추가">
-        <div className="grid gap-2.5">
+        <div className="-mx-2">
           {([
             ["📍", "지도에서 바로 찍기", "지도의 원하는 곳을 누르면 그 자리에 저장돼요", () => { nav("/"); toast("지도에서 원하는 곳을 눌러 주세요"); }],
             ["🔎", "이름으로 찾기", "지도 위 검색창에서 이름을 입력하세요", () => { nav("/"); setTimeout(() => (document.querySelector("input[aria-label='장소 검색']") as HTMLInputElement | null)?.focus(), 300); }],
             ["🔗", "네이버·카카오 링크 붙여넣기", "공유 링크를 북마크로 저장하고 위치를 지정해요", () => nav("/places/new")],
           ] as const).map(([e, t, d, fn]) => (
-            <button key={t} className="card p-4 flex items-center gap-3 text-left active:bg-sand" onClick={() => { setAddOpen(false); fn(); }}>
-              <span className="text-2xl w-10 text-center">{e}</span>
-              <span className="flex-1"><b>{t}</b><br /><span className="text-sm text-muted">{d}</span></span>
-              <Icon name="chevronR" className="text-muted" />
+            <button key={t} className="w-full rounded-[16px] px-3 py-3.5 flex items-center gap-4 text-left active:bg-sand transition-colors" onClick={() => { setAddOpen(false); fn(); }}>
+              <span className="text-[22px] w-12 h-12 rounded-full bg-sand flex items-center justify-center shrink-0">{e}</span>
+              <span className="flex-1 min-w-0"><span className="block font-semibold text-[16px]">{t}</span><span className="block text-[14px] text-muted mt-0.5">{d}</span></span>
+              <Icon name="chevronR" size={20} className="text-[#B0B8C1]" />
             </button>
           ))}
         </div>

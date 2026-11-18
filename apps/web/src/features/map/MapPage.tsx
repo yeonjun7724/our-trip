@@ -13,7 +13,7 @@ import PlaceDetail, { PlaceTitle } from "@/features/places/PlaceDetail";
 import QuickAdd, { type QuickAddInit } from "@/features/places/QuickAdd";
 import { useNearby } from "@/features/transit/NearbyStops";
 
-const STOP_STYLE = { BUS: { icon: "🚌", color: "#E8833A" }, SUBWAY: { icon: "🚇", color: "#7B5CC4" }, RAIL: { icon: "🚆", color: "#1E2A44" } };
+const STOP_STYLE = { BUS: { icon: "🚌", color: "#E8833A" }, SUBWAY: { icon: "🚇", color: "#7B5CC4" }, RAIL: { icon: "🚆", color: "#333D4B" } };
 const PREF_EMOJI = { MUST: "😍", GOOD: "🙂", MAYBE: "🤔", SKIP: "🙅" } as const;
 
 interface GeoHit { name: string; display_name: string; lat: number; lon: number; osm_ref: string }
@@ -95,7 +95,7 @@ export default function MapPage() {
     }));
     const st = detailOpen ? stops : ui.showStops ? ambient.data?.stops ?? [] : [];
     st.forEach((s) => m.push({ id: s.key, lat: s.lat, lon: s.lon, icon: STOP_STYLE[s.kind].icon, color: STOP_STYLE[s.kind].color, kind: "stop", label: s.name ?? "" }));
-    if (quick) m.push({ id: "quick", lat: quick.lat, lon: quick.lon, icon: "＋", color: "#EE6C4D", kind: "pick", label: quick.name || "여기에 추가" });
+    if (quick) m.push({ id: "quick", lat: quick.lat, lon: quick.lon, icon: "＋", color: "#F04452", kind: "pick", label: quick.name || "여기에 추가" });
     return m;
   }, [visible, ui.selectedPlaceId, ui.showStops, ui.day, stops, ambient.data, detailOpen, order, quick]);
 
@@ -131,30 +131,30 @@ export default function MapPage() {
       <div className="absolute top-0 inset-x-0 px-3 pt-[calc(var(--sat)+10px)] pointer-events-none z-10">
         <div className="flex gap-2 pointer-events-auto max-w-[640px] mx-auto">
           <div className="flex-1 relative">
-            <div className="glass shadow-float rounded-2xl flex items-center gap-2 px-3 h-12">
-              <Icon name="search" className="text-muted shrink-0" />
-              <input className="flex-1 bg-transparent outline-none min-w-0 text-[16px]" placeholder="장소 검색 · 새 장소 찾기" value={q}
+            <div className="bg-paper shadow-float rounded-[16px] flex items-center gap-2.5 px-4 h-[52px]">
+              <Icon name="search" className="text-[#B0B8C1] shrink-0" />
+              <input className="flex-1 bg-transparent outline-none min-w-0 text-[16px]" placeholder="어디로 가고 싶어요?" value={q}
                 onFocus={() => setSearchOpen(true)} onChange={(e) => { setQ(e.target.value); setSearchOpen(true); geo.reset(); }} aria-label="장소 검색" />
               {q && <button className="tap -mr-2 flex items-center justify-center text-muted" aria-label="지우기" onClick={() => { setQ(""); geo.reset(); }}><Icon name="x" size={18} /></button>}
             </div>
             {searchOpen && q.trim() && (
-              <div className="absolute left-0 right-0 mt-2 card shadow-float overflow-hidden max-h-[55dvh] overflow-y-auto fade-in">
-                {matches.length > 0 && <p className="px-3 pt-2 text-[11px] font-bold text-muted">우리 장소</p>}
+              <div className="absolute left-0 right-0 mt-2 card !rounded-[20px] shadow-float overflow-hidden py-1.5 max-h-[55dvh] overflow-y-auto fade-in">
+                {matches.length > 0 && <p className="px-4 pt-2 pb-1 text-[13px] font-medium text-muted">우리 장소</p>}
                 {matches.map((p) => (
-                  <button key={p.id} className="w-full text-left px-3 min-h-12 flex items-center gap-3 hover:bg-sand"
+                  <button key={p.id} className="w-full text-left px-4 min-h-14 flex items-center gap-3 active:bg-sand"
                     onClick={() => { setSearchOpen(false); setQ(""); select(p, true); }}>
-                    <span className="text-lg">{CATEGORY_ICON[p.category]}</span>
+                    <span className="w-10 h-10 rounded-full bg-sand flex items-center justify-center text-lg shrink-0">{CATEGORY_ICON[p.category]}</span>
                     <span className="flex-1 min-w-0"><b className="block truncate">{p.name}</b><span className="text-xs text-muted">{p.city_label}{order[p.id] ? ` · DAY ${order[p.id].day}` : ""}</span></span>
                   </button>
                 ))}
-                <button className="w-full text-left px-3 min-h-12 flex items-center gap-3 border-t border-line text-coral font-semibold"
+                <button className="w-full text-left px-4 min-h-14 flex items-center gap-3 text-coral font-semibold active:bg-sand"
                   disabled={q.trim().length < 2 || geo.isPending} onClick={() => geo.mutate(q.trim())}>
                   <Icon name="map" /> {geo.isPending ? "찾는 중…" : `지도에서 '${q.trim()}' 찾아 추가하기`}
                 </button>
                 {geo.error && <p className="px-3 pb-2 text-sm text-bad">검색에 실패했어요. 지도를 직접 눌러 추가할 수 있어요.</p>}
                 {geo.data?.results.length === 0 && <p className="px-3 pb-3 text-sm text-muted">OSM에서 찾지 못했어요. 지도를 직접 눌러 추가해 주세요.</p>}
                 {geo.data?.results.map((h) => (
-                  <button key={h.osm_ref} className="w-full text-left px-3 py-2 min-h-12 hover:bg-sand"
+                  <button key={h.osm_ref} className="w-full text-left px-4 py-2.5 min-h-14 active:bg-sand"
                     onClick={() => { setSearchOpen(false); setFocus({ lat: h.lat, lon: h.lon, zoom: 16, key: h.osm_ref });
                       setQuick({ lat: h.lat, lon: h.lon, name: h.name, source: "OSM_NOMINATIM", osm_ref: h.osm_ref }); setQ(""); }}>
                     <b className="text-sm">{h.name}</b><span className="block text-xs text-muted truncate">{h.display_name}</span>
@@ -163,7 +163,7 @@ export default function MapPage() {
               </div>
             )}
           </div>
-          <Link to="/home" className="glass shadow-float rounded-2xl w-12 h-12 flex items-center justify-center shrink-0" aria-label="여행 요약">
+          <Link to="/home" className="bg-paper shadow-float rounded-[16px] w-[52px] h-[52px] flex items-center justify-center shrink-0" aria-label="여행 요약">
             {trip?.members.find((m) => m.is_me) ? <Avatar name={trip.members.find((m) => m.is_me)!.nickname} index={memberIdx[trip.members.find((m) => m.is_me)!.id]} size={30} /> : <Icon name="home" />}
           </Link>
         </div>
@@ -191,7 +191,7 @@ export default function MapPage() {
           )}
           {noLoc > 0 && <Pill>위치 미정 {noLoc}곳은 지도에 없어요</Pill>}
           {routes.length > 0 && (
-            <span className="pointer-events-auto glass shadow-float rounded-full px-3 py-1 text-xs flex items-center gap-2">
+            <span className="pointer-events-auto bg-paper shadow-float rounded-full px-3.5 py-1.5 text-[13px] flex items-center gap-2">
               <span className="text-sea font-bold">┅ 도보</span><span className="text-[#E8833A] font-bold">━ 버스</span><span className="text-[#7B5CC4] font-bold">━ 지하철</span>
               <button className="font-semibold text-coral" onClick={() => setRoutes([])}>지우기</button>
             </span>
@@ -203,7 +203,7 @@ export default function MapPage() {
       {cardsVisible && (
         <div className="absolute inset-x-0 bottom-3 z-10">
           {visible.length === 0 ? (
-            <div className="mx-3 glass shadow-float rounded-2xl p-4 text-sm flex items-center gap-3 max-w-[640px] sm:mx-auto">
+            <div className="mx-3 bg-paper shadow-float rounded-[20px] p-5 text-[15px] flex items-center gap-3 max-w-[640px] sm:mx-auto">
               <span className="text-2xl">👆</span><span className="flex-1"><b>지도를 눌러 가고 싶은 곳을 추가해요</b><br /><span className="text-muted">검색창에서 이름으로 찾거나 네이버·카카오 링크도 넣을 수 있어요.</span></span>
             </div>
           ) : (
@@ -213,17 +213,17 @@ export default function MapPage() {
                 const sel = p.id === ui.selectedPlaceId;
                 return (
                   <button key={p.id} data-card={p.id} onClick={() => (sel ? setDetailOpen(true) : select(p))}
-                    className={`shrink-0 w-[78vw] max-w-[300px] text-left glass rounded-2xl p-3 shadow-float transition-all border-2 ${sel ? "border-coral" : "border-transparent"}`}>
+                    className={`shrink-0 w-[80vw] max-w-[320px] text-left bg-paper rounded-[20px] p-4 shadow-float transition-all active:scale-[.98] ${sel ? "ring-2 ring-coral" : ""}`}>
                     <div className="flex gap-3">
-                      <span className="w-11 h-11 rounded-xl flex items-center justify-center text-xl shrink-0" style={{ background: CITY_COLOR[p.city] + "22" }}>{CATEGORY_ICON[p.category]}</span>
+                      <span className="w-12 h-12 rounded-[14px] flex items-center justify-center text-xl shrink-0" style={{ background: CITY_COLOR[p.city] + "22" }}>{CATEGORY_ICON[p.category]}</span>
                       <span className="flex-1 min-w-0">
-                        <span className="flex items-center gap-1"><b className="truncate">{p.name}</b>{p.both_want && <span aria-label="둘 다 원함">💕</span>}</span>
-                        <span className="text-xs text-muted block">{p.city_label} · {CATEGORY_LABEL[p.category]}{o ? ` · DAY ${o.day} #${o.n}` : ""}{o?.visited ? " · 방문 ✓" : ""}{!p.has_location ? " · 위치 미정" : ""}</span>
+                        <span className="flex items-center gap-1"><b className="truncate text-[16px] font-semibold">{p.name}</b>{p.both_want && <span aria-label="둘 다 원함">💕</span>}</span>
+                        <span className="text-[13px] text-muted block mt-0.5">{p.city_label} · {CATEGORY_LABEL[p.category]}{o ? ` · DAY ${o.day} #${o.n}` : ""}{o?.visited ? " · 방문 ✓" : ""}{!p.has_location ? " · 위치 미정" : ""}</span>
                       </span>
                     </div>
                     <div className="flex items-center gap-1.5 mt-2">
                       {p.votes.filter((v) => v.preference || v.is_me).slice(0, 4).map((v) => (
-                        <span key={v.member_id} className="flex items-center gap-1 text-xs bg-paper rounded-full pl-0.5 pr-2 py-0.5 border border-line">
+                        <span key={v.member_id} className="flex items-center gap-1 text-xs bg-sand rounded-full pl-0.5 pr-2 py-0.5">
                           <Avatar name={v.nickname} index={memberIdx[v.member_id] ?? 0} size={18} />{v.preference ? `${PREF_EMOJI[v.preference]} ${PREF_SHORT[v.preference]}` : "–"}
                         </span>
                       ))}
@@ -266,14 +266,14 @@ export default function MapPage() {
 function Chip({ on, onClick, children, dot }: { on: boolean; onClick: () => void; children: React.ReactNode; dot?: string }) {
   return (
     <button onClick={onClick}
-      className={`shrink-0 min-h-10 px-3.5 rounded-full text-sm font-semibold shadow-float flex items-center gap-1.5 transition-colors ${on ? "bg-navy text-white" : "glass text-navy"}`}>
+      className={`shrink-0 min-h-10 px-3.5 rounded-full text-sm font-semibold shadow-float flex items-center gap-1.5 transition-colors ${on ? "bg-navy text-white" : "bg-paper text-navy-soft"}`}>
       {dot && <span className="w-2 h-2 rounded-full" style={{ background: dot }} />}{children}
     </button>
   );
 }
 
 function Pill({ children }: { children: React.ReactNode }) {
-  return <span className="pointer-events-auto glass shadow-float rounded-full px-3 py-1 text-xs">{children}</span>;
+  return <span className="pointer-events-auto bg-navy/85 text-white backdrop-blur rounded-full px-3 py-1.5 text-[13px] font-medium">{children}</span>;
 }
 
 function FilterRow({ label, value, options, onChange }: { label: string; value: string; options: [string, string][]; onChange: (v: string) => void }) {

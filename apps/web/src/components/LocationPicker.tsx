@@ -23,7 +23,7 @@ export default function LocationPicker({ open, onClose, onPick, city, initial, q
   const search = useMutation({
     mutationFn: () => api.get<{ results: GeoHit[] }>(`/api/geocode/search?${qs({ q, city })}`),
   });
-  const markers = useMemo<MapMarker[]>(() => pick ? [{ id: "pick", lat: pick.lat, lon: pick.lon, icon: "📍", color: "#EE6C4D", kind: "pick", label: pick.label }] : [], [pick]);
+  const markers = useMemo<MapMarker[]>(() => pick ? [{ id: "pick", lat: pick.lat, lon: pick.lon, icon: "📍", color: "#F04452", kind: "pick", label: pick.label }] : [], [pick]);
   const fit = useMemo<[number, number][] | null>(() => (pick ? [[pick.lat, pick.lon]] : null), [pick?.lat, pick?.lon]);
 
   return (

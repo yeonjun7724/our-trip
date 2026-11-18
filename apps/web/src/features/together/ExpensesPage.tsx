@@ -7,10 +7,10 @@ import Icon from "@/components/Icon";
 import { toast } from "@/components/Toast";
 
 export const EXPENSE_CATS: Record<string, { label: string; icon: string; color: string }> = {
-  TRANSPORT: { label: "교통", icon: "🚆", color: "#2F6FDE" }, FOOD: { label: "식비", icon: "🍜", color: "#EE6C4D" },
-  CAFE: { label: "카페", icon: "☕", color: "#B5651D" }, LODGING: { label: "숙소", icon: "🛏️", color: "#8E5CC8" },
-  TICKET: { label: "입장료", icon: "🎟️", color: "#0F8B8D" }, SHOPPING: { label: "쇼핑", icon: "🛍️", color: "#C9821A" },
-  ETC: { label: "기타", icon: "•", color: "#7D8597" },
+  TRANSPORT: { label: "교통", icon: "🚆", color: "#3182F6" }, FOOD: { label: "식비", icon: "🍜", color: "#FF6B6B" },
+  CAFE: { label: "카페", icon: "☕", color: "#F08A00" }, LODGING: { label: "숙소", icon: "🛏️", color: "#8E5CC8" },
+  TICKET: { label: "입장료", icon: "🎟️", color: "#00B8A9" }, SHOPPING: { label: "쇼핑", icon: "🛍️", color: "#C9821A" },
+  ETC: { label: "기타", icon: "•", color: "#8B95A1" },
 };
 
 interface ExpensesRes {
@@ -48,7 +48,7 @@ function AddExpense({ open, onClose }: { open: boolean; onClose: () => void }) {
           <div className="inline-flex items-baseline gap-1">
             <input inputMode="numeric" autoFocus aria-label="금액" placeholder="0" value={f.amount ? Number(f.amount).toLocaleString("ko-KR") : ""}
               onChange={(e) => setF({ ...f, amount: e.target.value.replace(/[^0-9]/g, "").slice(0, 8) })}
-              className="text-[40px] font-extrabold tracking-tight text-center bg-transparent outline-none w-[240px]" />
+              className="text-[40px] font-bold tracking-tight text-center bg-transparent outline-none w-[240px]" />
             <span className="text-2xl font-bold text-muted">원</span>
           </div>
           {f.split.length > 1 && amt > 0 && <p className="text-sm text-muted">1인당 {won(Math.round(amt / f.split.length))}</p>}
@@ -97,7 +97,7 @@ function AddExpense({ open, onClose }: { open: boolean; onClose: () => void }) {
             <option value="">선택 안 함</option>{trip?.days.map((d) => <option key={d.id} value={d.day_number}>DAY {d.day_number} {d.primary_city_label}</option>)}
           </select></label>
         <InlineError error={save.error} />
-        <button className="btn btn-primary w-full h-14 text-lg" disabled={amt <= 0 || !f.split.length || save.isPending}>{amt > 0 ? `${won(amt)} 저장` : "금액을 입력하세요"}</button>
+        <button className="btn btn-primary w-full !min-h-14 text-[17px]" disabled={amt <= 0 || !f.split.length || save.isPending}>{amt > 0 ? `${won(amt)} 저장` : "금액을 입력하세요"}</button>
       </form>
     </Sheet>
   );
@@ -120,9 +120,9 @@ export default function ExpensesPage() {
       {q.error && <ErrorState error={q.error} retry={() => q.refetch()} />}
       {d && (
         <>
-          <section className="rounded-[28px] p-5 text-white shadow-float" style={{ background: "linear-gradient(135deg,#1E2A44,#34466E)" }}>
+          <section className="rounded-[24px] p-6 text-white" style={{ background: "linear-gradient(140deg,#191F28,#333D4B)" }}>
             <p className="text-sm text-white/70">총 지출</p>
-            <p className="text-[36px] font-extrabold tracking-tight leading-tight">{won(d.total)}</p>
+            <p className="text-[36px] font-bold tracking-tight leading-tight">{won(d.total)}</p>
             {d.total > 0 && (
               <>
                 <div className="flex h-2.5 rounded-full overflow-hidden mt-3 bg-white/15">
@@ -136,8 +136,8 @@ export default function ExpensesPage() {
           </section>
 
           {d.members.length > 0 && (
-            <section className="card p-4">
-              <h2 className="font-bold mb-3">정산</h2>
+            <section className="card p-5">
+              <h2 className="text-[18px] font-bold tracking-[-0.02em] mb-3">정산</h2>
               <div className="space-y-2">
                 {d.members.map((m) => (
                   <div key={m.id} className="flex items-center gap-3">
@@ -159,7 +159,7 @@ export default function ExpensesPage() {
           )}
 
           <section>
-            <h2 className="font-bold mb-2">내역 {d.expenses.length}</h2>
+            <h2 className="text-[18px] font-bold tracking-[-0.02em] mb-2">내역 {d.expenses.length}</h2>
             {d.expenses.length === 0 ? (
               <EmptyState icon="💸" title="아직 기록이 없어요" body="KTX, 밀면, 카페… 같이 쓴 돈을 바로바로 적어 두면 마지막에 편해요."
                 action={<button className="btn btn-primary" onClick={() => setAdding(true)}>첫 지출 기록</button>} />

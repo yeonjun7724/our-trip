@@ -82,14 +82,14 @@ export function RailSearch() {
     <div className="space-y-4">
       <div className="flex gap-2 overflow-x-auto no-scrollbar -mx-1 px-1">
         {QUICK.map(([label, a, b, dayIdx]) => (
-          <button key={label} className="card !rounded-2xl shrink-0 px-4 py-3 text-left"
+          <button key={label} className="card !rounded-[14px] shrink-0 px-4 py-3 text-left"
             onClick={() => { setDep(STATIONS[a]); setArr(STATIONS[b]); const d = trip?.days[dayIdx]?.travel_date; if (d) setDate(d); tt.reset(); }}>
             <span className="text-[11px] font-bold text-coral block">DAY {dayIdx + 1}</span>
             <span className="font-bold whitespace-nowrap">🚆 {label}</span>
           </button>
         ))}
       </div>
-      <div className="card p-4 space-y-3">
+      <div className="card p-5 space-y-3">
         <div className="grid grid-cols-2 gap-3">
           <StationInput label="출발역" value={dep} onChange={setDep} />
           <StationInput label="도착역" value={arr} onChange={setArr} />
@@ -122,7 +122,7 @@ export function RailSearch() {
         <div className="space-y-2">
           {tt.data.message && <Notice tone="warn">{tt.data.message}</Notice>}
           {tt.data.trains.map((t, i) => (
-            <div key={`${t.train_no}-${i}`} className="card p-3 flex items-center gap-3">
+            <div key={`${t.train_no}-${i}`} className="card p-4 flex items-center gap-3">
               <div className="flex-1 min-w-0">
                 <p className="font-bold">{hm(t.departure)} → {hm(t.arrival)} <span className="text-sm font-normal text-navy-soft">{minutes(t.duration_minutes)}</span></p>
                 <p className="text-xs text-muted">{t.train_type} {t.train_no} · {t.origin_name}→{t.destination_name}{t.adult_fare_krw ? ` · 일반 ${t.adult_fare_krw.toLocaleString()}원(API 제공)` : ""}</p>
@@ -137,7 +137,7 @@ export function RailSearch() {
         </div>
       )}
       {tt.data && !tt.data.direct_available && (
-        <div className="card p-4 space-y-3">
+        <div className="card p-5 space-y-3">
           <p className="font-bold">환승 후보 검토</p>
           <StationInput label="환승역" value={via} onChange={setVia} />
           <label className="text-sm flex items-center gap-2">최소 환승시간
@@ -210,7 +210,7 @@ export function MyTrains() {
       {q.error && <ErrorState error={q.error} retry={() => q.refetch()} />}
       {q.data?.length === 0 && <EmptyState icon="🚆" title="기록한 열차가 없어요" body="시간표에서 고르거나 직접 기록해 보세요." />}
       {q.data?.map((r) => (
-        <div key={r.id} className={`card p-3.5 ${r.reservation_status === "CANCELLED" ? "opacity-50" : ""}`}>
+        <div key={r.id} className={`card p-4 ${r.reservation_status === "CANCELLED" ? "opacity-50" : ""}`}>
           <div className="flex items-start gap-2">
             <div className="flex-1 min-w-0">
               <p className="text-xs text-muted">{md(r.travel_date)} · {r.train_type ?? "열차"} {r.train_number ?? ""}</p>
@@ -228,13 +228,13 @@ export function MyTrains() {
           <div className="mt-2 space-y-1"><StationLocation r={r} which="origin" /><StationLocation r={r} which="destination" /></div>
           <div className="flex gap-2 mt-2">
             <a href={KORAIL} target="_blank" rel="noreferrer" className="btn btn-outline text-sm flex-1">코레일 예매 ↗</a>
-            <button className="btn text-sm text-bad bg-paper border border-line" onClick={() => confirm("이 열차 기록을 삭제할까요?") && del.mutate(r)}>삭제</button>
+            <button className="btn text-sm text-bad bg-[#FFEEF0]" onClick={() => confirm("이 열차 기록을 삭제할까요?") && del.mutate(r)}>삭제</button>
           </div>
         </div>
       ))}
       <InlineError error={setStatus.error ?? del.error} />
       {manual ? (
-        <form className="card p-4 space-y-3" onSubmit={(e) => { e.preventDefault(); add.mutate(undefined); }}>
+        <form className="card p-5 space-y-3" onSubmit={(e) => { e.preventDefault(); add.mutate(undefined); }}>
           <p className="font-bold">열차 직접 기록</p>
           <Notice>직접 입력한 시각은 '직접 입력'으로 표시되고 공식 시간표로 확인된 것으로 취급하지 않아요.</Notice>
           <div className="grid grid-cols-2 gap-3">
@@ -264,9 +264,9 @@ export function PassPanel() {
   const label = { SELECT_3: "선택 3일권", CONTINUOUS_7: "연속 7일권", UNDECIDED: "미정" }[p.pass_type] ?? p.pass_type;
   return (
     <div className="space-y-3">
-      <div className="card p-4">
+      <div className="card p-5">
         <p className="text-sm text-muted">내일로 패스</p>
-        <p className="text-xl font-extrabold">{label}</p>
+        <p className="text-xl font-bold">{label}</p>
         <p className="mt-2">열차 탑승일 <b className="text-2xl">{p.rail_day_count}</b>일{p.allowed_days ? ` / 패스로 쓸 수 있는 날 ${p.allowed_days}일` : ""}</p>
         <p className="text-sm text-navy-soft">예매 전 열차 {p.unreserved_trains}편</p>
       </div>

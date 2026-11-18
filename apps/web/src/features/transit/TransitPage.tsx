@@ -52,7 +52,7 @@ function RouteSearch() {
   const fit = useMemo(() => routes.length ? routes.flatMap((r) => r.geometry.coordinates.map(([x, y]) => [y, x] as [number, number])) : null, [routes]);
   return (
     <div className="space-y-3">
-      <div className="card p-4 space-y-3">
+      <div className="card p-5 space-y-3">
         <PointSelect label="출발" value={o} onChange={(v) => { setO(v); if (v === "me") locate(); setRes(null); }} me />
         {err && <p className="text-sm text-bad">{err}</p>}
         <PointSelect label="도착" value={d} onChange={(v) => { setD(v); setRes(null); }} me={false} />
@@ -81,7 +81,7 @@ function StopsTab() {
   const at = sel === "me" ? pos : p ? { lat: p.latitude!, lon: p.longitude! } : null;
   return (
     <div className="space-y-3">
-      <div className="card p-4">
+      <div className="card p-5">
         <label className="label" htmlFor="sb">기준 위치</label>
         <select id="sb" className="field" value={sel} onChange={(e) => { setSel(e.target.value); if (e.target.value === "me") locate(); }}>
           <option value="">선택</option><option value="me">현재 위치</option>

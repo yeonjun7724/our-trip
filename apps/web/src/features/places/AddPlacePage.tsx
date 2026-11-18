@@ -50,7 +50,7 @@ export default function AddPlacePage() {
   return (
     <div className="page">
       <Header title="장소 추가" sub="네이버 지도·카카오맵 공유 링크를 붙여 넣거나 직접 입력해요" />
-      <section className="card p-4">
+      <section className="card p-5">
         <label className="label" htmlFor="link">공유 링크 / 공유 문구</label>
         <textarea id="link" className="field min-h-20" value={text} onChange={(e) => setText(e.target.value)}
           placeholder={"예) [네이버 지도]\n황리단길\nhttps://naver.me/..."} />
@@ -88,7 +88,7 @@ export default function AddPlacePage() {
         <div>
           <span className="label">위치</span>
           {loc ? (
-            <div className="card p-3 flex items-center gap-2">
+            <div className="card p-4 flex items-center gap-2">
               <span className="flex-1 text-sm">📍 {loc.label ?? `${loc.lat.toFixed(5)}, ${loc.lon.toFixed(5)}`}<br />
                 <span className="text-xs text-muted">{loc.source === "OSM_NOMINATIM" ? "OpenStreetMap 검색 결과" : "지도에서 직접 선택"}</span></span>
               <button type="button" className="btn btn-ghost" onClick={() => setPicker(true)}>변경</button>
@@ -115,7 +115,7 @@ export default function AddPlacePage() {
             <button type="button" className="btn btn-primary w-full" onClick={() => nav("/wishlist")}>위시리스트로</button>
           </div>
         ) : (
-          <button className="btn btn-primary w-full h-14 text-lg" disabled={!f.name.trim() || save.isPending}>{save.isPending ? "저장 중…" : "위시리스트에 저장"}</button>
+          <button className="btn btn-primary w-full !min-h-14 text-[17px]" disabled={!f.name.trim() || save.isPending}>{save.isPending ? "저장 중…" : "위시리스트에 저장"}</button>
         )}
       </form>
       <LocationPicker open={picker} onClose={() => setPicker(false)} city={f.city} query={f.name} initial={loc} onPick={setLoc} />

@@ -91,7 +91,7 @@ export default function PlaceDetail({ place, onRoute, onStops, onDeleted }: {
       </div>
 
       <section>
-        <h3 className="font-bold mb-2">우리 선호도</h3>
+        <h3 className="text-[17px] font-bold tracking-[-0.02em] mb-3">우리 선호도</h3>
         <div className="grid grid-cols-2 gap-2">
           {place.votes.filter((v) => v.preference || v.is_me).map((v) => (
             <div key={v.member_id} className="card px-3 py-2">
@@ -112,7 +112,7 @@ export default function PlaceDetail({ place, onRoute, onStops, onDeleted }: {
       </section>
 
       <section id="pd-plan">
-        <h3 className="font-bold mb-2">일정</h3>
+        <h3 className="text-[17px] font-bold tracking-[-0.02em] mb-3">일정</h3>
         {assignedDay ? <p className="text-sm">DAY {assignedDay.day_number} {assignedDay.primary_city_label}에 들어가 있어요.</p> : (
           <div className="flex flex-wrap gap-2">
             {it?.days.map((d) => (
@@ -125,7 +125,7 @@ export default function PlaceDetail({ place, onRoute, onStops, onDeleted }: {
       </section>
 
       <section>
-        <h3 className="font-bold mb-2">위치</h3>
+        <h3 className="text-[17px] font-bold tracking-[-0.02em] mb-3">위치</h3>
         {place.has_location ? (
           <div className="flex items-center gap-2 flex-wrap">
             <SourceBadge status={place.coordinate_source === "USER_PICKED" ? "USER_ENTERED" : "VERIFIED_STATIC"}
@@ -142,7 +142,7 @@ export default function PlaceDetail({ place, onRoute, onStops, onDeleted }: {
 
       {dest && (
         <section id="pd-route">
-          <h3 className="font-bold mb-2">여기까지 가는 길</h3>
+          <h3 className="text-[17px] font-bold tracking-[-0.02em] mb-3">여기까지 가는 길</h3>
           <div className="flex gap-2">
             <select className="field" value={originId} onChange={(e) => { setOriginId(e.target.value); setWalk(null); setTransit(null); }} aria-label="출발지">
               <option value="me">현재 위치</option>
@@ -156,7 +156,7 @@ export default function PlaceDetail({ place, onRoute, onStops, onDeleted }: {
             {origin && <TransitSearchButton origin={origin} destination={dest} onResult={setTransit} />}
           </div>
           {walk && (
-            <div className="card p-3 mt-2">
+            <div className="card p-4 mt-2">
               {walk.status === "OK" ? (
                 <>
                   <p><b>도보 {minutes(walk.duration_minutes)}</b> · {km(walk.distance_m)}</p>
@@ -182,7 +182,7 @@ export default function PlaceDetail({ place, onRoute, onStops, onDeleted }: {
       <Comments placeId={place.id} memberIdx={midx} />
 
       <section>
-        <h3 className="font-bold mb-2">여행 메모</h3>
+        <h3 className="text-[17px] font-bold tracking-[-0.02em] mb-3">여행 메모</h3>
         <textarea className="field min-h-24" value={memo} maxLength={2000} onChange={(e) => setMemo(e.target.value)} placeholder="예: 해 질 무렵에 가기" />
         <div className="flex gap-2 mt-2 items-center">
           <label className="text-sm text-navy-soft flex items-center gap-2">머무는 시간
@@ -200,7 +200,7 @@ export default function PlaceDetail({ place, onRoute, onStops, onDeleted }: {
         {place.external_links.map((l) => <a key={l.url} href={l.url} target="_blank" rel="noreferrer" className="btn btn-outline text-sm">{l.label} ↗</a>)}
       </section>
 
-      <button className="btn w-full text-bad bg-paper border border-line" onClick={() => { if (confirm(`'${place.name}'을(를) 삭제할까요? 일정에서도 빠져요.`)) del.mutate(undefined); }}>장소 삭제</button>
+      <button className="btn w-full text-bad bg-[#FFEEF0]" onClick={() => { if (confirm(`'${place.name}'을(를) 삭제할까요? 일정에서도 빠져요.`)) del.mutate(undefined); }}>장소 삭제</button>
 
       <LocationPicker open={picker} onClose={() => setPicker(false)} city={place.city} query={place.name}
         initial={place.has_location ? { lat: place.latitude!, lon: place.longitude! } : null}
@@ -211,7 +211,7 @@ export default function PlaceDetail({ place, onRoute, onStops, onDeleted }: {
 
 /** Rich sheet title: category tile tinted by city + name + meta. */
 export function PlaceTitle({ place }: { place: Place }) {
-  const tint = ({ busan: "#2F6FDE", gyeongju: "#B5651D", pohang: "#0F8B8D", other: "#7D8597" } as const)[place.city];
+  const tint = ({ busan: "#3182F6", gyeongju: "#F08A00", pohang: "#00B8A9", other: "#8B95A1" } as const)[place.city];
   return (
     <span className="flex items-center gap-3 min-w-0">
       <span className="w-11 h-11 rounded-2xl flex items-center justify-center text-[22px] shrink-0" style={{ background: tint + "22" }}>

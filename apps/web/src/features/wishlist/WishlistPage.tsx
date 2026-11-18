@@ -69,20 +69,19 @@ function PlaceCard({ p, onClick, memberIdx }: { p: Place; onClick: () => void; m
     () => toast(p.my_vote === "MUST" ? "선택을 취소했어요" : `'${p.name}' 꼭 가고 싶어 😍`));
   return (
     <div className={`card overflow-hidden flex ${p.excluded ? "opacity-60" : ""}`}>
-      <span className="w-1.5 shrink-0" style={{ background: CITY_COLOR[p.city] }} aria-hidden />
-      <button onClick={onClick} className="flex-1 min-w-0 text-left p-3.5 flex gap-3">
-        <span className="w-11 h-11 rounded-xl flex items-center justify-center text-xl shrink-0" style={{ background: CITY_COLOR[p.city] + "1f" }}>{CATEGORY_ICON[p.category] ?? "📍"}</span>
+      <button onClick={onClick} className="flex-1 min-w-0 text-left pl-5 pr-3 py-4 flex gap-3.5 active:bg-[#F9FAFB] transition-colors">
+        <span className="w-12 h-12 rounded-[14px] flex items-center justify-center text-xl shrink-0" style={{ background: CITY_COLOR[p.city] + "1f" }}>{CATEGORY_ICON[p.category] ?? "📍"}</span>
         <span className="flex-1 min-w-0">
           <span className="flex items-center gap-1.5">
-            <span className="font-bold truncate">{p.name}</span>
-            {p.both_want && <span className="chip bg-coral text-white">💕 둘 다</span>}
+            <span className="font-semibold text-[16px] truncate">{p.name}</span>
+            {p.both_want && <span className="chip bg-[#FFEEF0] text-[#F04452]">💕 둘 다</span>}
           </span>
-          <span className="text-xs text-muted block mt-0.5">
+          <span className="text-[13px] text-muted block mt-0.5">
             {p.city_label}{p.planned_day ? ` · DAY ${p.planned_day}` : " · 미배정"}{!p.has_location ? " · 위치 미정" : ""} · {p.created_by ?? "?"}
           </span>
           <span className="flex gap-1 mt-1.5 flex-wrap">
             {p.votes.filter((v) => v.preference || v.is_me).slice(0, 4).map((v) => (
-              <span key={v.member_id} className="flex items-center gap-1 text-xs rounded-full pl-0.5 pr-2 py-0.5 bg-ivory border border-line">
+              <span key={v.member_id} className="flex items-center gap-1 text-xs rounded-full pl-0.5 pr-2 py-0.5 bg-sand">
                 <Avatar name={v.nickname} index={memberIdx[v.member_id] ?? 0} size={18} />{v.preference ? `${PREF_EMOJI[v.preference]} ${PREF_SHORT[v.preference]}` : "–"}
               </span>
             ))}
@@ -90,7 +89,7 @@ function PlaceCard({ p, onClick, memberIdx }: { p: Place; onClick: () => void; m
         </span>
       </button>
       <button onClick={() => love.mutate(undefined)} disabled={love.isPending} aria-pressed={p.my_vote === "MUST"} aria-label="꼭 가고 싶어"
-        className={`w-14 shrink-0 flex flex-col items-center justify-center gap-0.5 border-l border-line text-[11px] font-semibold ${p.my_vote === "MUST" ? "text-coral" : "text-muted"}`}>
+        className={`w-14 shrink-0 flex flex-col items-center justify-center gap-0.5 text-[11px] pr-1 active:scale-95 transition-transform font-semibold ${p.my_vote === "MUST" ? "text-coral" : "text-muted"}`}>
         <span className={`text-xl ${p.my_vote === "MUST" ? "pop" : "grayscale opacity-60"}`}>😍</span>{p.priority_score}점
       </button>
     </div>

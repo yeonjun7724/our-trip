@@ -36,8 +36,8 @@ export default function WeatherCard({ days }: { days: Day[] }) {
         w: q.data!.cities[c]?.days.find((x) => x.date === todayKST()) }));
   const fetched = Object.values(q.data.cities).find((c) => c.fetched_at)?.fetched_at;
   return (
-    <section className="card p-4">
-      <div className="flex items-center mb-3"><h2 className="font-bold flex-1">{dated.length ? "여행 날씨" : "지금 날씨"}</h2>
+    <section className="card p-5">
+      <div className="flex items-center mb-3"><h2 className="text-[18px] font-bold tracking-[-0.02em] flex-1">{dated.length ? "여행 날씨" : "지금 날씨"}</h2>
         <span className="text-[11px] text-muted">Open-Meteo 예보{fetched ? ` · ${ago(fetched)}` : ""}</span></div>
       <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(${Math.min(rows.length, 4)}, minmax(0,1fr))` }}>
         {rows.slice(0, 4).map((r, i) => (

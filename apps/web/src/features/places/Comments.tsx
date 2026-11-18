@@ -16,7 +16,7 @@ export default function Comments({ placeId, memberIdx }: { placeId: string; memb
   const del = useTripMutation((id: string) => api.del(`/api/comments/${id}`));
   return (
     <section>
-      <h3 className="font-bold mb-2 flex items-center gap-1.5">💬 우리 대화 {q.data?.length ? <span className="text-muted font-semibold text-sm">{q.data.length}</span> : null}</h3>
+      <h3 className="text-[17px] font-bold tracking-[-0.02em] mb-3 flex items-center gap-1.5">💬 우리 대화 {q.data?.length ? <span className="text-muted font-semibold text-sm">{q.data.length}</span> : null}</h3>
       <div className="space-y-2">
         {q.data?.length === 0 && <p className="text-sm text-muted">"여기 해 질 때 가자!" 같은 이야기를 남겨 보세요.</p>}
         {q.data?.map((c) => (

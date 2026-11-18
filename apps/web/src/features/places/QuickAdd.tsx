@@ -67,12 +67,12 @@ export default function QuickAdd({ init, onClose, onSaved }: { init: QuickAddIni
           {(["busan", "gyeongju", "pohang", "other"] as City[]).map((c) => (
             <button type="button" key={c} onClick={() => setF({ ...f, city: c })}
               className={`min-h-9 px-3 rounded-full font-semibold border ${f.city === c ? "text-white border-transparent" : "bg-paper border-line"}`}
-              style={f.city === c ? { background: c === "other" ? "#7D8597" : CITY_COLOR[c] } : undefined}>{CITY_LABEL[c]}</button>
+              style={f.city === c ? { background: c === "other" ? "#8B95A1" : CITY_COLOR[c] } : undefined}>{CITY_LABEL[c]}</button>
           ))}
         </div>
         <p className="text-xs text-muted">위치: {init?.source === "OSM_NOMINATIM" ? "OpenStreetMap 검색 결과" : "지도에서 직접 선택"}</p>
         <InlineError error={save.error} />
-        <button className="btn btn-primary w-full h-14 text-lg" disabled={!f.name.trim() || save.isPending}>{save.isPending ? "저장 중…" : "저장"}</button>
+        <button className="btn btn-primary w-full !min-h-14 text-[17px]" disabled={!f.name.trim() || save.isPending}>{save.isPending ? "저장 중…" : "저장"}</button>
       </form>
     </Sheet>
   );

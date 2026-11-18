@@ -2,8 +2,18 @@ import { useEffect, useRef } from "react";
 import maplibregl, { type Map as MLMap, type Marker } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 
-// OpenFreeMap vector tiles (OpenMapTiles schema, OSM data) — free, no key. 2D only.
-const STYLE_URL = "https://tiles.openfreemap.org/styles/positron";
+// OpenStreetMap standard raster tiles (openstreetmap.org "Standard" layer) — 2D only, no key.
+// Usage policy: https://operations.osmfoundation.org/policies/tiles/ (attribution required, light traffic).
+const STYLE: maplibregl.StyleSpecification = {
+  version: 8,
+  sources: {
+    osm: {
+      type: "raster", tiles: ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"], tileSize: 256, maxzoom: 19,
+      attribution: '© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors',
+    },
+  },
+  layers: [{ id: "osm", type: "raster", source: "osm" }],
+};
 
 export interface MapMarker {
   id: string; lat: number; lon: number; label?: string; icon: string; color: string;
@@ -16,35 +26,8 @@ export interface RouteFeature {
 }
 
 const ROUTE_COLOR: Record<string, string> = {
-  WALK: "#2F6FDE", BUS: "#E8833A", SUBWAY: "#7B5CC4", TRAIN: "#1E2A44", EXPRESS_BUS: "#E8833A", INTERCITY_BUS: "#E8833A",
+  WALK: "#3182F6", BUS: "#E8833A", SUBWAY: "#7B5CC4", TRAIN: "#333D4B", EXPRESS_BUS: "#E8833A", INTERCITY_BUS: "#E8833A",
 };
-
-function strip3D(map: MLMap) {
-  const style = map.getStyle();
-  style.layers?.forEach((l) => {
-    if (l.type === "fill-extrusion" || l.type === "hillshade" || (l as { id: string }).id.includes("3d")) {
-      map.removeLayer(l.id);
-    }
-  });
-  map.setTerrain(null);
-  theme(map);
-}
-
-/** Warm brand palette on top of the neutral Positron style (paint-only; data unchanged). */
-function theme(map: MLMap) {
-  const set = (id: string, prop: string, v: unknown) => { try { map.setPaintProperty(id, prop, v); } catch { /* layer lacks prop */ } };
-  for (const l of map.getStyle().layers ?? []) {
-    const id = l.id.toLowerCase();
-    if (l.type === "background") set(l.id, "background-color", "#F7F2EA");
-    else if (l.type === "fill" && /water|ocean|sea|lake|river/.test(id)) set(l.id, "fill-color", "#C9E2F2");
-    else if (l.type === "line" && /water|river|stream|canal/.test(id)) set(l.id, "line-color", "#A9CDE6");
-    else if (l.type === "fill" && /park|wood|forest|grass|landcover|scrub|cemetery|garden/.test(id)) set(l.id, "fill-color", "#DCEBD2");
-    else if (l.type === "fill" && /building/.test(id)) set(l.id, "fill-color", "#ECE3D5");
-    else if (l.type === "fill" && /landuse|residential/.test(id)) set(l.id, "fill-color", "#F1EBE0");
-    else if (l.type === "line" && /motorway|trunk|primary/.test(id) && !/casing/.test(id)) set(l.id, "line-color", "#FBE7C6");
-    else if (l.type === "symbol" && /place|label|name/.test(id)) { set(l.id, "text-color", "#3E4A63"); set(l.id, "text-halo-color", "#FBF7F0"); }
-  }
-}
 
 export default function MapView({
   markers, routes = [], fit, focus, center = [129.07, 35.15], zoom = 11, onSelect, onPick, showLocate = true, className = "", bottomPad = 220,
@@ -66,7 +49,7 @@ export default function MapView({
   useEffect(() => {
     if (!el.current) return;
     const m = new maplibregl.Map({
-      container: el.current, style: STYLE_URL, center, zoom, maxPitch: 0, pitchWithRotate: false,
+      container: el.current, style: STYLE, maxZoom: 19, center, zoom, maxPitch: 0, pitchWithRotate: false,
       dragRotate: false, attributionControl: { compact: true },
     });
     m.touchZoomRotate.disableRotation();
@@ -77,7 +60,6 @@ export default function MapView({
     }
     // style.load fires as soon as the style is parsed — "load" would wait for the first tiles (slow on mobile networks)
     m.once("style.load", () => {
-      strip3D(m);
       m.addSource("routes", { type: "geojson", data: { type: "FeatureCollection", features: [] } });
       m.addLayer({ id: "route-casing", type: "line", source: "routes", filter: ["!=", ["get", "mode"], "WALK"],
         paint: { "line-color": "#ffffff", "line-width": ["case", ["==", ["get", "mode"], "TRAIN"], 9, 7] },
@@ -145,7 +127,7 @@ export default function MapView({
       src?.setData({ type: "FeatureCollection", features: routes.map((r) => ({
         type: "Feature", geometry: r.geometry,
         // provider colour only when the provider supplied one; otherwise a generic mode colour
-        properties: { mode: r.mode, color: r.color || ROUTE_COLOR[r.mode] || "#7D8597" },
+        properties: { mode: r.mode, color: r.color || ROUTE_COLOR[r.mode] || "#8B95A1" },
       })) });
     };
     if (loaded.current) apply(); else m.once("ourtrip:ready", apply);
