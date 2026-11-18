@@ -19,11 +19,11 @@ export function ListSkeleton({ rows = 3 }: { rows?: number }) {
 
 export function EmptyState({ icon = "🗺️", title, body, action }: { icon?: string; title: string; body?: ReactNode; action?: ReactNode }) {
   return (
-    <div className="card p-6 text-center">
-      <div className="text-3xl mb-2" aria-hidden>{icon}</div>
-      <p className="font-bold">{title}</p>
-      {body && <p className="text-sm text-muted mt-1">{body}</p>}
-      {action && <div className="mt-4">{action}</div>}
+    <div className="card px-6 py-8 text-center">
+      <div className="mx-auto w-16 h-16 rounded-[22px] hero-grad flex items-center justify-center text-3xl shadow-float mb-3" aria-hidden>{icon}</div>
+      <p className="font-extrabold text-[17px]">{title}</p>
+      {body && <p className="text-sm text-muted mt-1.5 leading-relaxed">{body}</p>}
+      {action && <div className="mt-5">{action}</div>}
     </div>
   );
 }
@@ -33,7 +33,7 @@ export function ErrorState({ error, retry }: { error: unknown; retry?: () => voi
   const offline = error instanceof ApiError && error.code === "NETWORK";
   return (
     <div className="card p-4 border-bad/30 bg-[#FFF5F3]" role="alert">
-      <p className="font-semibold text-bad">{offline ? "오프라인 상태예요" : "불러오지 못했어요"}</p>
+      <p className="font-bold text-bad flex items-center gap-1.5">{offline ? "📡 오프라인 상태예요" : "⚠️ 불러오지 못했어요"}</p>
       <p className="text-sm text-navy-soft mt-1">{msg}</p>
       {retry && <button className="btn btn-outline mt-3" onClick={retry}>다시 시도</button>}
     </div>
@@ -131,20 +131,29 @@ export function Avatar({ name, index = 0, size = 24, ring = false }: { name: str
   );
 }
 
+/** md = iOS-style track (primary tabs), sm = chips (filters). */
 export function Segmented<T extends string>({ value, options, onChange, size = "md" }: {
   value: T; options: { value: T; label: ReactNode }[]; onChange: (v: T) => void; size?: "sm" | "md";
 }) {
+  if (size === "md") {
+    return (
+      <div className="bg-sand/80 rounded-2xl p-1 flex gap-1 overflow-x-auto no-scrollbar" role="tablist">
+        {options.map((o) => (
+          <button key={o.value} role="tab" aria-selected={value === o.value} onClick={() => onChange(o.value)}
+            className={`shrink-0 flex-1 min-w-fit whitespace-nowrap px-3.5 min-h-10 rounded-xl text-[14px] font-bold transition-all duration-200 ${
+              value === o.value ? "bg-paper text-navy shadow-[0_1px_4px_rgba(30,42,68,.14)]" : "text-navy-soft"}`}>
+            {o.label}
+          </button>
+        ))}
+      </div>
+    );
+  }
   return (
     <div className="flex gap-1.5 overflow-x-auto no-scrollbar -mx-1 px-1" role="tablist">
       {options.map((o) => (
-        <button
-          key={o.value}
-          role="tab"
-          aria-selected={value === o.value}
-          onClick={() => onChange(o.value)}
-          className={`shrink-0 rounded-full px-3.5 ${size === "sm" ? "min-h-9 text-sm" : "min-h-11"} font-semibold border ${
-            value === o.value ? "bg-navy text-white border-navy" : "bg-paper border-line text-navy-soft"}`}
-        >
+        <button key={o.value} role="tab" aria-selected={value === o.value} onClick={() => onChange(o.value)}
+          className={`shrink-0 rounded-full px-3.5 min-h-9 text-[13px] font-semibold transition-colors ${
+            value === o.value ? "bg-navy text-white" : "bg-paper text-navy-soft shadow-[0_0_0_1px_var(--color-line)_inset]"}`}>
           {o.label}
         </button>
       ))}
@@ -152,15 +161,34 @@ export function Segmented<T extends string>({ value, options, onChange, size = "
   );
 }
 
+/** Large title that collapses into a sticky, blurred compact bar on scroll (iOS pattern). */
 export function Header({ title, sub, right }: { title: ReactNode; sub?: ReactNode; right?: ReactNode }) {
+  const sentinel = useRef<HTMLDivElement>(null);
+  const [compact, setCompact] = useState(false);
+  useEffect(() => {
+    const el = sentinel.current;
+    if (!el || typeof IntersectionObserver === "undefined") return;
+    const io = new IntersectionObserver(([e]) => setCompact(!e.isIntersecting), { rootMargin: "-8px 0px 0px 0px" });
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
   return (
-    <header className="flex items-end gap-3 mb-4">
-      <div className="flex-1 min-w-0">
-        <h1 className="text-2xl font-extrabold tracking-tight">{title}</h1>
-        {sub && <p className="text-sm text-muted mt-0.5">{sub}</p>}
+    <>
+      <div className={`fixed top-0 inset-x-0 z-20 glass border-b border-line/70 transition-all duration-200 ${compact ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-2 pointer-events-none"}`}
+        style={{ paddingTop: "var(--sat)" }} aria-hidden={!compact}>
+        <div className="max-w-[640px] mx-auto h-12 px-4 flex items-center gap-2">
+          <p className="flex-1 text-center font-bold truncate">{title}</p>
+        </div>
       </div>
-      {right}
-    </header>
+      <header className="flex items-end gap-3 mb-5 pt-1">
+        <div className="flex-1 min-w-0">
+          <h1 className="text-[30px] leading-[1.15] font-extrabold tracking-[-0.02em]">{title}</h1>
+          {sub && <p className="text-[14px] text-muted mt-1">{sub}</p>}
+        </div>
+        {right}
+      </header>
+      <div ref={sentinel} className="h-px -mt-5 mb-5" aria-hidden />
+    </>
   );
 }
 

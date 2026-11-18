@@ -9,7 +9,7 @@ export default defineConfig({
   outputDir: "e2e-results/artifacts",
   projects: [
     { name: "chromium", use: { browserName: "chromium" } },
-    { name: "iphone-webkit", use: { ...devices["iPhone 14"] }, grep: /방 만들기|반응형 390px/ },
+    { name: "iphone-webkit", use: { ...devices["iPhone 14"] }, grep: /방 만들기|반응형 390px|핀 끝/ },
   ],
   use: { screenshot: "only-on-failure", baseURL: process.env.E2E_BASE_URL ?? "http://127.0.0.1:8000", locale: "ko-KR", timezoneId: "Asia/Seoul" },
 });

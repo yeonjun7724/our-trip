@@ -27,6 +27,23 @@ function strip3D(map: MLMap) {
     }
   });
   map.setTerrain(null);
+  theme(map);
+}
+
+/** Warm brand palette on top of the neutral Positron style (paint-only; data unchanged). */
+function theme(map: MLMap) {
+  const set = (id: string, prop: string, v: unknown) => { try { map.setPaintProperty(id, prop, v); } catch { /* layer lacks prop */ } };
+  for (const l of map.getStyle().layers ?? []) {
+    const id = l.id.toLowerCase();
+    if (l.type === "background") set(l.id, "background-color", "#F7F2EA");
+    else if (l.type === "fill" && /water|ocean|sea|lake|river/.test(id)) set(l.id, "fill-color", "#C9E2F2");
+    else if (l.type === "line" && /water|river|stream|canal/.test(id)) set(l.id, "line-color", "#A9CDE6");
+    else if (l.type === "fill" && /park|wood|forest|grass|landcover|scrub|cemetery|garden/.test(id)) set(l.id, "fill-color", "#DCEBD2");
+    else if (l.type === "fill" && /building/.test(id)) set(l.id, "fill-color", "#ECE3D5");
+    else if (l.type === "fill" && /landuse|residential/.test(id)) set(l.id, "fill-color", "#F1EBE0");
+    else if (l.type === "line" && /motorway|trunk|primary/.test(id) && !/casing/.test(id)) set(l.id, "line-color", "#FBE7C6");
+    else if (l.type === "symbol" && /place|label|name/.test(id)) { set(l.id, "text-color", "#3E4A63"); set(l.id, "text-halo-color", "#FBF7F0"); }
+  }
 }
 
 export default function MapView({
@@ -58,7 +75,8 @@ export default function MapView({
     if (showLocate) {
       m.addControl(new maplibregl.GeolocateControl({ positionOptions: { enableHighAccuracy: true }, trackUserLocation: true }), "top-right");
     }
-    m.on("load", () => {
+    // style.load fires as soon as the style is parsed — "load" would wait for the first tiles (slow on mobile networks)
+    m.once("style.load", () => {
       strip3D(m);
       m.addSource("routes", { type: "geojson", data: { type: "FeatureCollection", features: [] } });
       m.addLayer({ id: "route-casing", type: "line", source: "routes", filter: ["!=", ["get", "mode"], "WALK"],
@@ -70,11 +88,15 @@ export default function MapView({
       m.addLayer({ id: "route-walk", type: "line", source: "routes", filter: ["==", ["get", "mode"], "WALK"],
         paint: { "line-color": ROUTE_COLOR.WALK, "line-width": 4, "line-dasharray": [1.2, 1.4] },
         layout: { "line-cap": "round", "line-join": "round" } });
+      const zoomClass = () => m.getContainer().classList.toggle("z-lo", m.getZoom() < 12.8);
+      m.on("zoom", zoomClass);
+      zoomClass();
       loaded.current = true;
       m.fire("ourtrip:ready");
     });
     m.on("click", (e) => pickRef.current?.(e.lngLat.lat, e.lngLat.lng));
     map.current = m;
+    (window as unknown as { __otMap?: MLMap }).__otMap = m; // for pin-accuracy checks (E2E)
     return () => { m.remove(); map.current = null; loaded.current = false; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -94,15 +116,19 @@ export default function MapView({
       } else {
         node.className = `ot-pin${mk.selected ? " sel" : ""}${mk.done ? " done" : ""}${mk.kind === "pick" ? " pop" : ""}`;
         node.style.opacity = mk.dim ? "0.45" : "1";
-        node.innerHTML = `<span class="pinwrap"><span class="head" style="background:${mk.color}"><span>${mk.icon}</span></span>`
+        // Teardrop pin drawn as SVG; its tip is at the bottom-centre of .pinbox, which is the anchor point.
+        node.innerHTML = `<span class="pinbox">`
+          + `<svg width="34" height="44" viewBox="0 0 34 44" aria-hidden="true"><path d="M17 43C17 43 2.5 27.5 2.5 16.5a14.5 14.5 0 0 1 29 0C31.5 27.5 17 43 17 43z" fill="${mk.color}" stroke="#fff" stroke-width="2.5"/></svg>`
+          + `<span class="ico">${mk.icon}</span>`
           + (mk.done ? `<span class="badge" style="background:#2E8B57">✓</span>` : mk.badge ? `<span class="badge">${escapeHtml(mk.badge)}</span>` : "")
-          + (mk.heart ? `<span class="heart">💕</span>` : "") + `</span>`
-          + (mk.label ? `<span class="lbl">${escapeHtml(mk.label)}</span>` : "");
+          + (mk.heart ? `<span class="heart">💕</span>` : "")
+          + `<span class="tip" data-tip></span>`
+          + (mk.label ? `<span class="lbl">${escapeHtml(mk.label)}</span>` : "")
+          + `</span>`;
         if (mk.selected) node.style.zIndex = "5";
       }
       node.addEventListener("click", (ev) => { ev.stopPropagation(); selRef.current?.(mk.id, mk.kind); });
-      const marker = new maplibregl.Marker({ element: node, anchor: mk.kind === "stop" ? "center" : "bottom",
-        offset: mk.kind === "stop" ? [0, 0] : [0, mk.label ? 4 : -2] })
+      const marker = new maplibregl.Marker({ element: node, anchor: mk.kind === "stop" ? "center" : "bottom" })
         .setLngLat([mk.lon, mk.lat]).addTo(m);
       // MapLibre replaces aria-label with a generic "Map marker"; restore the place/stop name
       marker.getElement().setAttribute("aria-label", mk.label || (mk.kind === "stop" ? "정류장" : "장소"));

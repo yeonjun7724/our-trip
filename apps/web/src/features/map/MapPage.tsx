@@ -9,7 +9,7 @@ import { CATEGORY_ICON, CATEGORY_LABEL, CITY_COLOR, CITY_LABEL, PREF_SHORT } fro
 import { useItinerary, usePlaces, useTrip, useTripId } from "@/services/queries";
 import type { City, Place, Stop } from "@/services/types";
 import { useMapUi } from "@/store/ui";
-import PlaceDetail from "@/features/places/PlaceDetail";
+import PlaceDetail, { PlaceTitle } from "@/features/places/PlaceDetail";
 import QuickAdd, { type QuickAddInit } from "@/features/places/QuickAdd";
 import { useNearby } from "@/features/transit/NearbyStops";
 
@@ -226,7 +226,7 @@ export default function MapPage() {
       )}
 
       <Sheet open={detailOpen && !!selected} backdrop={false} onClose={() => { setDetailOpen(false); setRoutes([]); setStops([]); }}
-        title={selected && <span>{CATEGORY_ICON[selected.category]} {selected.name}</span>}>
+        title={selected && <PlaceTitle place={selected} />}>
         {selected && <PlaceDetail key={selected.id} place={selected} onRoute={setRoutes} onStops={setStops}
           onDeleted={() => { setDetailOpen(false); ui.set({ selectedPlaceId: null }); }} />}
       </Sheet>

@@ -66,8 +66,6 @@ export default function PlaceDetail({ place, onRoute, onStops, onDeleted }: {
   return (
     <div className="space-y-5">
       <div className="flex flex-wrap gap-1.5 text-xs">
-        <span className="chip bg-sand">{place.city_label}</span>
-        <span className="chip bg-sand">{CATEGORY_LABEL[place.category] ?? place.category}</span>
         {place.provider !== "MANUAL" && place.provider !== "SEED" && <span className="chip bg-sand">{place.provider === "NAVER" ? "네이버 링크" : "카카오 링크"}</span>}
         {place.both_want && <span className="chip bg-coral text-white">둘 다 가고 싶어</span>}
       </div>
@@ -205,5 +203,21 @@ export default function PlaceDetail({ place, onRoute, onStops, onDeleted }: {
         initial={place.has_location ? { lat: place.latitude!, lon: place.longitude! } : null}
         onPick={(p) => patch.mutate({ latitude: p.lat, longitude: p.lon, coordinate_source: p.source, osm_ref: p.osm_ref ?? null })} />
     </div>
+  );
+}
+
+/** Rich sheet title: category tile tinted by city + name + meta. */
+export function PlaceTitle({ place }: { place: Place }) {
+  const tint = ({ busan: "#2F6FDE", gyeongju: "#B5651D", pohang: "#0F8B8D", other: "#7D8597" } as const)[place.city];
+  return (
+    <span className="flex items-center gap-3 min-w-0">
+      <span className="w-11 h-11 rounded-2xl flex items-center justify-center text-[22px] shrink-0" style={{ background: tint + "22" }}>
+        {({ ATTRACTION: "📸", CAFE: "☕", FOOD: "🍜", LODGING: "🛏️", SHOPPING: "🛍️", STATION: "🚉" } as Record<string, string>)[place.category] ?? "📍"}
+      </span>
+      <span className="min-w-0 flex flex-col">
+        <span className="truncate text-[19px] leading-tight">{place.name}{place.both_want ? " 💕" : ""}</span>
+        <span className="text-[12px] font-semibold text-muted">{place.city_label} · {CATEGORY_LABEL[place.category] ?? place.category}</span>
+      </span>
+    </span>
   );
 }

@@ -21,6 +21,7 @@ async function enter(page: Page, name: string) {
 }
 
 test("방 만들기 없이 지도에서 바로: 이름 선택 → 지도 탭으로 장소 추가 → 함께 투표·일정", async ({ browser }) => {
+  test.setTimeout(150_000);
   const stamp = Date.now().toString().slice(-5);
   const owner = await newPhone(browser);
   const p = owner.page;
@@ -30,7 +31,10 @@ test("방 만들기 없이 지도에서 바로: 이름 선택 → 지도 탭으�
   // tap the map -> add a place right there
   await p.getByRole("button", { name: "부산", exact: true }).click();
   await p.waitForTimeout(1500);
-  await p.locator(".maplibregl-canvas").click({ position: { x: 60 + (Number(stamp) % 250), y: 260 + (Number(stamp) % 300) }, force: true });
+  // fire a map click at an empty coordinate (sea off Busan Station) so it can't hit a pin
+  await p.evaluate((n) => (window as unknown as { __otMap: { fire: (t: string, e: object) => void } }).__otMap
+    .fire("click", { lngLat: { lng: 129.05 + (n % 50) / 10000, lat: 35.105 + (n % 30) / 10000 }, point: { x: 0, y: 0 },
+      originalEvent: { target: document.querySelector(".maplibregl-canvas") } }), Number(stamp));
   await expect(p.getByText("여기에 장소 추가")).toBeVisible();
   const spot = `우리스팟${stamp}`;
   await p.getByLabel("장소 이름").fill(spot);

@@ -12,6 +12,7 @@ interface Station { station_id: string; name: string; city_name: string | null }
 function StationInput({ label, value, onChange }: { label: string; value: Station | null; onChange: (s: Station | null) => void }) {
   const [q, setQ] = useState(value?.name ?? "");
   const [open, setOpen] = useState(false);
+  useEffect(() => { if (value) setQ(value.name); }, [value?.station_id]); // eslint-disable-line
   const res = useQuery({
     queryKey: ["stations", q], enabled: open && q.trim().length >= 1, retry: false, staleTime: 3600_000,
     queryFn: () => api.get<{ stations: Station[] }>(`/api/rail/stations?${qs({ q: q.trim() })}`),
@@ -38,6 +39,16 @@ function StationInput({ label, value, onChange }: { label: string; value: Statio
     </div>
   );
 }
+
+// Official TAGO station IDs, verified with a live call on 2026-11-18.
+const STATIONS: Record<string, Station> = {
+  busan: { station_id: "NAT014445", name: "부산", city_name: "부산광역시" },
+  gyeongju: { station_id: "NATH13421", name: "경주", city_name: "경상북도" },
+  pohang: { station_id: "NAT8B0351", name: "포항", city_name: "경상북도" },
+};
+const QUICK: [string, string, string, number][] = [
+  ["부산 → 경주", "busan", "gyeongju", 1], ["경주 → 포항", "gyeongju", "pohang", 2], ["포항 → 부산", "pohang", "busan", 3],
+];
 
 interface TimetableRes { status: string; trains: Train[]; message?: string | null; notice?: string; fetched_at: string; direct_available: boolean }
 interface TransferRes { status: string; candidates: { first: Train; second: Train; transfer_minutes: number; total_minutes: number | null }[]; notice: string; fetched_at: string }
@@ -69,6 +80,15 @@ export function RailSearch() {
 
   return (
     <div className="space-y-4">
+      <div className="flex gap-2 overflow-x-auto no-scrollbar -mx-1 px-1">
+        {QUICK.map(([label, a, b, dayIdx]) => (
+          <button key={label} className="card !rounded-2xl shrink-0 px-4 py-3 text-left"
+            onClick={() => { setDep(STATIONS[a]); setArr(STATIONS[b]); const d = trip?.days[dayIdx]?.travel_date; if (d) setDate(d); tt.reset(); }}>
+            <span className="text-[11px] font-bold text-coral block">DAY {dayIdx + 1}</span>
+            <span className="font-bold whitespace-nowrap">🚆 {label}</span>
+          </button>
+        ))}
+      </div>
       <div className="card p-4 space-y-3">
         <div className="grid grid-cols-2 gap-3">
           <StationInput label="출발역" value={dep} onChange={setDep} />
@@ -81,12 +101,15 @@ export function RailSearch() {
               <option value="">전체</option><option value="KTX">KTX</option><option value="ITX">ITX</option><option value="새마을">새마을</option><option value="무궁화">무궁화</option>
             </select></div>
         </div>
-        <div>
-          <span className="label">출발 시간대 {hours[0]}시 ~ {hours[1]}시</span>
-          <div className="flex gap-2">
-            <input type="range" min={0} max={23} value={hours[0]} aria-label="시작 시각" className="flex-1 accent-coral" onChange={(e) => setHours([Math.min(Number(e.target.value), hours[1]), hours[1]])} />
-            <input type="range" min={0} max={23} value={hours[1]} aria-label="끝 시각" className="flex-1 accent-coral" onChange={(e) => setHours([hours[0], Math.max(Number(e.target.value), hours[0])])} />
-          </div>
+        <div className="grid grid-cols-2 gap-3">
+          <label className="text-xs font-semibold text-navy-soft">이 시각부터
+            <select className="field mt-1" value={hours[0]} onChange={(e) => setHours([Number(e.target.value), Math.max(Number(e.target.value), hours[1])])}>
+              {Array.from({ length: 24 }, (_, h) => <option key={h} value={h}>{h}시</option>)}
+            </select></label>
+          <label className="text-xs font-semibold text-navy-soft">이 시각까지
+            <select className="field mt-1" value={hours[1]} onChange={(e) => setHours([Math.min(hours[0], Number(e.target.value)), Number(e.target.value)])}>
+              {Array.from({ length: 24 }, (_, h) => <option key={h} value={h}>{h}시대</option>)}
+            </select></label>
         </div>
         <button className="btn btn-primary w-full" disabled={!dep || !arr || !date || tt.isPending} onClick={() => tt.mutate()}>{tt.isPending ? "조회 중…" : "시간표 조회"}</button>
       </div>

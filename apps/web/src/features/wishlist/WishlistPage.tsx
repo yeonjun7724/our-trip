@@ -6,7 +6,7 @@ import { toast } from "@/components/Toast";
 import { CATEGORY_ICON, CITY_COLOR, CITY_LABEL, PREF_SHORT } from "@/services/format";
 import type { City, Place } from "@/services/types";
 import { Avatar, EmptyState, ErrorState, Header, ListSkeleton, Segmented, Sheet } from "@/components/ui";
-import PlaceDetail from "@/features/places/PlaceDetail";
+import PlaceDetail, { PlaceTitle } from "@/features/places/PlaceDetail";
 
 type Tab = "all" | "mine" | "partner" | "both" | "unassigned" | "assigned";
 
@@ -55,7 +55,7 @@ export default function WishlistPage() {
         )}
         {list.map((p) => <PlaceCard key={p.id} p={p} memberIdx={memberIdx} onClick={() => setSel(p.id)} />)}
       </div>
-      <Sheet open={!!selected} onClose={() => setSel(null)} title={selected && `${CATEGORY_ICON[selected.category]} ${selected.name}`}>
+      <Sheet open={!!selected} onClose={() => setSel(null)} title={selected && <PlaceTitle place={selected} />}>
         {selected && <PlaceDetail key={selected.id} place={selected} onDeleted={() => setSel(null)} />}
       </Sheet>
     </div>
