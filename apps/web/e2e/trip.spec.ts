@@ -30,7 +30,7 @@ test("방 만들기 없이 지도에서 바로: 이름 선택 → 지도 탭으�
   // tap the map -> add a place right there
   await p.getByRole("button", { name: "부산", exact: true }).click();
   await p.waitForTimeout(1500);
-  await p.locator(".maplibregl-canvas").click({ position: { x: 200, y: 420 } });
+  await p.locator(".maplibregl-canvas").click({ position: { x: 60 + (Number(stamp) % 250), y: 260 + (Number(stamp) % 300) }, force: true });
   await expect(p.getByText("여기에 장소 추가")).toBeVisible();
   const spot = `우리스팟${stamp}`;
   await p.getByLabel("장소 이름").fill(spot);

@@ -35,7 +35,7 @@
 
 ## 아직 못 한 것
 
-- iOS Safari 실기기 테스트를 하지 못했습니다(Playwright WebKit도 설치하지 않음). Android Chrome 실기기도 테스트하지 못했습니다.
+- iOS Safari와 Android Chrome 실기기 테스트는 하지 못했습니다. 대신 Playwright **WebKit iPhone 14 에뮬레이션**에서 핵심 흐름과 390px 반응형 테스트 2개를 통과했습니다(2026-11-18).
 - 실제 API 키로 TAGO 열차·버스·지하철과 ODsay를 호출해 보지 못했습니다. 키를 넣은 뒤 `scripts/check_providers.py`를 실행해야 합니다.
 - Docker 이미지는 로컬에 Docker가 없어 Railway 원격 빌드로만 확인했습니다(빌드와 기동 성공).
 
