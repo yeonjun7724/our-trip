@@ -1,149 +1,267 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import QuickAdd from "@/features/places/QuickAdd";
+import { useMutation } from "@tanstack/react-query";
 import MapView, { type MapMarker, type RouteFeature } from "@/components/MapView";
-import { Sheet } from "@/components/ui";
-import { CATEGORY_ICON, CATEGORY_LABEL, CITY_COLOR, CITY_LABEL } from "@/services/format";
-import { useItinerary, usePlaces, useTripId } from "@/services/queries";
-import type { City, Stop } from "@/services/types";
+import Icon from "@/components/Icon";
+import { Avatar, Sheet } from "@/components/ui";
+import { api, qs } from "@/services/api";
+import { CATEGORY_ICON, CATEGORY_LABEL, CITY_COLOR, CITY_LABEL, PREF_SHORT } from "@/services/format";
+import { useItinerary, usePlaces, useTrip, useTripId } from "@/services/queries";
+import type { City, Place, Stop } from "@/services/types";
 import { useMapUi } from "@/store/ui";
 import PlaceDetail from "@/features/places/PlaceDetail";
+import QuickAdd, { type QuickAddInit } from "@/features/places/QuickAdd";
 import { useNearby } from "@/features/transit/NearbyStops";
 
 const STOP_STYLE = { BUS: { icon: "🚌", color: "#E8833A" }, SUBWAY: { icon: "🚇", color: "#7B5CC4" }, RAIL: { icon: "🚆", color: "#1E2A44" } };
+const PREF_EMOJI = { MUST: "😍", GOOD: "🙂", MAYBE: "🤔", SKIP: "🙅" } as const;
+
+interface GeoHit { name: string; display_name: string; lat: number; lon: number; osm_ref: string }
 
 export default function MapPage() {
   const tripId = useTripId();
   const places = usePlaces(tripId);
   const it = useItinerary(tripId);
+  const trip = useTrip(tripId).data;
   const ui = useMapUi();
   const [params] = useSearchParams();
   const [routes, setRoutes] = useState<RouteFeature[]>([]);
   const [stops, setStops] = useState<Stop[]>([]);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [center, setCenter] = useState<{ lat: number; lon: number } | null>(null);
-  const [quick, setQuick] = useState<{ lat: number; lon: number } | null>(null);
+  const [quick, setQuick] = useState<QuickAddInit | null>(null);
+  const [focus, setFocus] = useState<{ lat: number; lon: number; zoom?: number; key: string } | null>(null);
+  const [detailOpen, setDetailOpen] = useState(false);
+  const [q, setQ] = useState("");
+  const [searchOpen, setSearchOpen] = useState(false);
+  const carousel = useRef<HTMLDivElement>(null);
 
-  useEffect(() => { const p = params.get("place"); if (p) ui.set({ selectedPlaceId: p }); }, [params]); // eslint-disable-line
+  useEffect(() => { const p = params.get("place"); if (p) { ui.set({ selectedPlaceId: p }); setDetailOpen(true); } }, [params]); // eslint-disable-line
 
-  const dayOf = useMemo(() => {
-    const m: Record<string, { day: number; visited: boolean }> = {};
-    it.data?.days.forEach((d) => d.entries.forEach((e) => { if (e.place_id) m[e.place_id] = { day: d.day_number, visited: e.visit_status === "VISITED" }; }));
+  const memberIdx = useMemo(() => Object.fromEntries((trip?.members ?? []).map((m, i) => [m.id, i])), [trip]);
+
+  const order = useMemo(() => {
+    const m: Record<string, { day: number; n: number; visited: boolean }> = {};
+    it.data?.days.forEach((d) => {
+      let n = 0;
+      d.entries.forEach((e) => { if (e.place_id) { n += 1; m[e.place_id] = { day: d.day_number, n, visited: e.visit_status === "VISITED" }; } });
+    });
     return m;
   }, [it.data]);
 
   const visible = useMemo(() => (places.data ?? []).filter((p) => {
     if (ui.city !== "all" && p.city !== ui.city) return false;
-    if (ui.day !== "all" && dayOf[p.id]?.day !== ui.day) return false;
+    if (ui.day !== "all" && order[p.id]?.day !== ui.day) return false;
     if (ui.category !== "all" && p.category !== ui.category) return false;
     if (ui.creator === "me" && !p.created_by_me) return false;
     if (ui.creator === "partner" && (p.created_by_me || !p.created_by_id)) return false;
-    if (ui.scheduled === "yes" && !dayOf[p.id]) return false;
-    if (ui.scheduled === "no" && dayOf[p.id]) return false;
-    if (ui.hideVisited && dayOf[p.id]?.visited) return false;
+    if (ui.scheduled === "yes" && !order[p.id]) return false;
+    if (ui.scheduled === "no" && order[p.id]) return false;
+    if (ui.hideVisited && order[p.id]?.visited) return false;
     return true;
-  }), [places.data, ui, dayOf]);
+  }).sort((a, b) => ui.day !== "all"
+    ? (order[a.id]?.n ?? 99) - (order[b.id]?.n ?? 99)
+    : Number(b.both_want) - Number(a.both_want) || b.priority_score - a.priority_score), [places.data, ui, order]);
 
   const selected = places.data?.find((p) => p.id === ui.selectedPlaceId) ?? null;
-  const ambient = useNearby(center?.lat, center?.lon, 500, ui.showStops && !selected);
+  const ambient = useNearby(center?.lat, center?.lon, 500, ui.showStops && !detailOpen);
+
+  const select = (p: Place, open = false) => {
+    ui.set({ selectedPlaceId: p.id });
+    setRoutes([]); setStops([]);
+    if (p.has_location) setFocus({ lat: p.latitude!, lon: p.longitude!, key: `${p.id}:${Date.now()}` });
+    if (open) setDetailOpen(true);
+  };
+
+  useEffect(() => {
+    if (!selected || !carousel.current) return;
+    carousel.current.querySelector(`[data-card="${selected.id}"]`)?.scrollIntoView({ behavior: "smooth", inline: "start", block: "nearest" });
+  }, [selected?.id]); // eslint-disable-line
 
   const markers = useMemo<MapMarker[]>(() => {
     const m: MapMarker[] = visible.filter((p) => p.has_location).map((p) => ({
       id: p.id, lat: p.latitude!, lon: p.longitude!, label: p.name, icon: CATEGORY_ICON[p.category] ?? "📍",
-      color: CITY_COLOR[p.city], kind: "place", selected: p.id === ui.selectedPlaceId, dim: dayOf[p.id]?.visited,
+      color: CITY_COLOR[p.city], kind: "place", selected: p.id === ui.selectedPlaceId,
+      badge: order[p.id] ? (ui.day !== "all" ? String(order[p.id].n) : `${order[p.id].day}·${order[p.id].n}`) : null,
+      heart: p.both_want, done: order[p.id]?.visited,
     }));
-    const st = selected ? stops : ui.showStops ? ambient.data?.stops ?? [] : [];
+    const st = detailOpen ? stops : ui.showStops ? ambient.data?.stops ?? [] : [];
     st.forEach((s) => m.push({ id: s.key, lat: s.lat, lon: s.lon, icon: STOP_STYLE[s.kind].icon, color: STOP_STYLE[s.kind].color, kind: "stop", label: s.name ?? "" }));
-    if (quick) m.push({ id: "quick", lat: quick.lat, lon: quick.lon, icon: "＋", color: "#EE6C4D", kind: "pick", label: "여기에 추가" });
+    if (quick) m.push({ id: "quick", lat: quick.lat, lon: quick.lon, icon: "＋", color: "#EE6C4D", kind: "pick", label: quick.name || "여기에 추가" });
     return m;
-  }, [visible, ui.selectedPlaceId, ui.showStops, stops, ambient.data, selected, dayOf, quick]);
+  }, [visible, ui.selectedPlaceId, ui.showStops, ui.day, stops, ambient.data, detailOpen, order, quick]);
 
   const fit = useMemo<[number, number][] | null>(() => {
-    if (selected?.has_location && routes.length === 0) return [[selected.latitude!, selected.longitude!]];
     if (routes.length) return routes.flatMap((r) => r.geometry.coordinates.map(([x, y]) => [y, x] as [number, number]));
     const pts = visible.filter((p) => p.has_location).map((p) => [p.latitude!, p.longitude!] as [number, number]);
     return pts.length ? pts : null;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selected?.id, routes, ui.city, ui.day, places.data?.length]);
+  }, [routes, ui.city, ui.day, places.data?.length]);
 
+  const geo = useMutation({ mutationFn: (text: string) => api.get<{ results: GeoHit[] }>(`/api/geocode/search?${qs({ q: text, city: ui.city === "all" ? undefined : ui.city })}`) });
+  const matches = q.trim() ? (places.data ?? []).filter((p) => p.name.toLowerCase().includes(q.trim().toLowerCase())).slice(0, 6) : [];
+  const days = it.data?.days ?? [];
   const noLoc = visible.filter((p) => !p.has_location).length;
-  const activeFilters = [ui.day !== "all", ui.category !== "all", ui.creator !== "all", ui.scheduled !== "all", ui.hideVisited].filter(Boolean).length;
+  const activeFilters = [ui.category !== "all", ui.creator !== "all", ui.scheduled !== "all", ui.hideVisited].filter(Boolean).length;
+  const cardsVisible = !detailOpen && !quick && !searchOpen;
 
   return (
     <div className="fixed inset-0 bottom-[calc(var(--nav-h)+var(--sab))]">
-      <MapView markers={markers} routes={routes} fit={fit}
-        onSelect={(id, kind) => { if (kind === "place") { setRoutes([]); setStops([]); ui.set({ selectedPlaceId: id }); } }}
+      <MapView markers={markers} routes={routes} fit={fit} focus={focus} bottomPad={detailOpen ? 420 : 230}
+        onSelect={(id, kind) => {
+          if (kind === "place") { const p = places.data?.find((x) => x.id === id); if (p) select(p, detailOpen || p.id === ui.selectedPlaceId); }
+          if (kind === "pick") setQuick((x) => x);
+        }}
         onPick={(lat, lon) => {
-          if (selected) return;
-          if (ui.showStops) setCenter({ lat, lon }); else setQuick({ lat, lon });
+          if (searchOpen) { setSearchOpen(false); return; }
+          if (detailOpen) return;
+          if (ui.showStops) setCenter({ lat, lon });
+          else { ui.set({ selectedPlaceId: null }); setQuick({ lat, lon }); }
         }} />
 
-      {!quick && !selected && (
-        <div className="absolute right-3 flex flex-col items-end gap-2" style={{ bottom: 16 }}>
-          <span className="text-xs bg-paper/95 rounded-lg px-2 py-1 shadow-sm">{ui.showStops ? "지도를 눌러 주변 정류장 보기" : "지도를 눌러 장소 추가"}</span>
-          <Link to="/places/new" className="btn btn-primary shadow-lg">🔗 링크로 추가</Link>
+      {/* top: search + chips */}
+      <div className="absolute top-0 inset-x-0 px-3 pt-[calc(var(--sat)+10px)] pointer-events-none z-10">
+        <div className="flex gap-2 pointer-events-auto max-w-[640px] mx-auto">
+          <div className="flex-1 relative">
+            <div className="glass shadow-float rounded-2xl flex items-center gap-2 px-3 h-12">
+              <Icon name="search" className="text-muted shrink-0" />
+              <input className="flex-1 bg-transparent outline-none min-w-0 text-[16px]" placeholder="장소 검색 · 새 장소 찾기" value={q}
+                onFocus={() => setSearchOpen(true)} onChange={(e) => { setQ(e.target.value); setSearchOpen(true); geo.reset(); }} aria-label="장소 검색" />
+              {q && <button className="tap -mr-2 flex items-center justify-center text-muted" aria-label="지우기" onClick={() => { setQ(""); geo.reset(); }}><Icon name="x" size={18} /></button>}
+            </div>
+            {searchOpen && q.trim() && (
+              <div className="absolute left-0 right-0 mt-2 card shadow-float overflow-hidden max-h-[55dvh] overflow-y-auto fade-in">
+                {matches.length > 0 && <p className="px-3 pt-2 text-[11px] font-bold text-muted">우리 장소</p>}
+                {matches.map((p) => (
+                  <button key={p.id} className="w-full text-left px-3 min-h-12 flex items-center gap-3 hover:bg-sand"
+                    onClick={() => { setSearchOpen(false); setQ(""); select(p, true); }}>
+                    <span className="text-lg">{CATEGORY_ICON[p.category]}</span>
+                    <span className="flex-1 min-w-0"><b className="block truncate">{p.name}</b><span className="text-xs text-muted">{p.city_label}{order[p.id] ? ` · DAY ${order[p.id].day}` : ""}</span></span>
+                  </button>
+                ))}
+                <button className="w-full text-left px-3 min-h-12 flex items-center gap-3 border-t border-line text-coral font-semibold"
+                  disabled={q.trim().length < 2 || geo.isPending} onClick={() => geo.mutate(q.trim())}>
+                  <Icon name="map" /> {geo.isPending ? "찾는 중…" : `지도에서 '${q.trim()}' 찾아 추가하기`}
+                </button>
+                {geo.error && <p className="px-3 pb-2 text-sm text-bad">검색에 실패했어요. 지도를 직접 눌러 추가할 수 있어요.</p>}
+                {geo.data?.results.length === 0 && <p className="px-3 pb-3 text-sm text-muted">OSM에서 찾지 못했어요. 지도를 직접 눌러 추가해 주세요.</p>}
+                {geo.data?.results.map((h) => (
+                  <button key={h.osm_ref} className="w-full text-left px-3 py-2 min-h-12 hover:bg-sand"
+                    onClick={() => { setSearchOpen(false); setFocus({ lat: h.lat, lon: h.lon, zoom: 16, key: h.osm_ref });
+                      setQuick({ lat: h.lat, lon: h.lon, name: h.name, source: "OSM_NOMINATIM", osm_ref: h.osm_ref }); setQ(""); }}>
+                    <b className="text-sm">{h.name}</b><span className="block text-xs text-muted truncate">{h.display_name}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+          <Link to="/home" className="glass shadow-float rounded-2xl w-12 h-12 flex items-center justify-center shrink-0" aria-label="여행 요약">
+            {trip?.members.find((m) => m.is_me) ? <Avatar name={trip.members.find((m) => m.is_me)!.nickname} index={memberIdx[trip.members.find((m) => m.is_me)!.id]} size={30} /> : <Icon name="home" />}
+          </Link>
+        </div>
+        <div className="flex gap-1.5 overflow-x-auto no-scrollbar pointer-events-auto mt-2 max-w-[640px] mx-auto pb-1">
+          {(["all", "busan", "gyeongju", "pohang"] as (City | "all")[]).map((c) => (
+            <Chip key={c} on={ui.city === c} onClick={() => ui.set({ city: c, day: "all" })}
+              dot={c === "all" ? undefined : CITY_COLOR[c]}>{c === "all" ? "전체" : CITY_LABEL[c]}</Chip>
+          ))}
+          <span className="w-px bg-line mx-0.5 my-1.5 shrink-0" />
+          {days.map((d) => (
+            <Chip key={d.id} on={ui.day === d.day_number} onClick={() => ui.set({ day: ui.day === d.day_number ? "all" : d.day_number, city: "all" })}>
+              DAY {d.day_number}
+            </Chip>
+          ))}
+          <Chip on={activeFilters > 0} onClick={() => setFiltersOpen(true)}><Icon name="filter" size={15} /> 필터{activeFilters ? ` ${activeFilters}` : ""}</Chip>
+          <Chip on={ui.showStops} onClick={() => { ui.set({ showStops: !ui.showStops }); setCenter(null); }}><Icon name="bus" size={15} /> 주변 교통</Chip>
+        </div>
+        <div className="flex flex-wrap gap-1.5 mt-1.5 max-w-[640px] mx-auto">
+          {ui.showStops && !detailOpen && (
+            <Pill>{center ? (ambient.isFetching ? "정류장 찾는 중…" : `반경 500m 정류장 ${ambient.data?.stops.length ?? 0}곳`) : "지도를 누르면 그 주변 정류장을 보여줘요"}</Pill>
+          )}
+          {noLoc > 0 && <Pill>위치 미정 {noLoc}곳은 지도에 없어요</Pill>}
+          {routes.length > 0 && (
+            <span className="pointer-events-auto glass shadow-float rounded-full px-3 py-1 text-xs flex items-center gap-2">
+              <span className="text-sea font-bold">┅ 도보</span><span className="text-[#E8833A] font-bold">━ 버스</span><span className="text-[#7B5CC4] font-bold">━ 지하철</span>
+              <button className="font-semibold text-coral" onClick={() => setRoutes([])}>지우기</button>
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* bottom: synced place cards */}
+      {cardsVisible && (
+        <div className="absolute inset-x-0 bottom-3 z-10">
+          {visible.length === 0 ? (
+            <div className="mx-3 glass shadow-float rounded-2xl p-4 text-sm flex items-center gap-3 max-w-[640px] sm:mx-auto">
+              <span className="text-2xl">👆</span><span className="flex-1"><b>지도를 눌러 가고 싶은 곳을 추가해요</b><br /><span className="text-muted">검색창에서 이름으로 찾거나 네이버·카카오 링크도 넣을 수 있어요.</span></span>
+            </div>
+          ) : (
+            <div ref={carousel} className="flex gap-2.5 overflow-x-auto no-scrollbar snap-x-cards px-3 pb-1">
+              {visible.map((p) => {
+                const o = order[p.id];
+                const sel = p.id === ui.selectedPlaceId;
+                return (
+                  <button key={p.id} data-card={p.id} onClick={() => (sel ? setDetailOpen(true) : select(p))}
+                    className={`shrink-0 w-[78vw] max-w-[300px] text-left glass rounded-2xl p-3 shadow-float transition-all border-2 ${sel ? "border-coral" : "border-transparent"}`}>
+                    <div className="flex gap-3">
+                      <span className="w-11 h-11 rounded-xl flex items-center justify-center text-xl shrink-0" style={{ background: CITY_COLOR[p.city] + "22" }}>{CATEGORY_ICON[p.category]}</span>
+                      <span className="flex-1 min-w-0">
+                        <span className="flex items-center gap-1"><b className="truncate">{p.name}</b>{p.both_want && <span aria-label="둘 다 원함">💕</span>}</span>
+                        <span className="text-xs text-muted block">{p.city_label} · {CATEGORY_LABEL[p.category]}{o ? ` · DAY ${o.day} #${o.n}` : ""}{o?.visited ? " · 방문 ✓" : ""}{!p.has_location ? " · 위치 미정" : ""}</span>
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1.5 mt-2">
+                      {p.votes.filter((v) => v.preference || v.is_me).slice(0, 4).map((v) => (
+                        <span key={v.member_id} className="flex items-center gap-1 text-xs bg-paper rounded-full pl-0.5 pr-2 py-0.5 border border-line">
+                          <Avatar name={v.nickname} index={memberIdx[v.member_id] ?? 0} size={18} />{v.preference ? `${PREF_EMOJI[v.preference]} ${PREF_SHORT[v.preference]}` : "–"}
+                        </span>
+                      ))}
+                      <span className="ml-auto text-xs font-semibold text-coral flex items-center">{sel ? "자세히" : "보기"}<Icon name="chevronR" size={14} /></span>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </div>
       )}
 
-      <div className="absolute top-0 inset-x-0 px-3 pt-[calc(var(--sat)+10px)] pointer-events-none">
-        <div className="flex gap-1.5 overflow-x-auto no-scrollbar pointer-events-auto pr-14">
-          {(["all", "busan", "gyeongju", "pohang"] as (City | "all")[]).map((c) => (
-            <button key={c} onClick={() => ui.set({ city: c })}
-              className={`shrink-0 min-h-10 px-3.5 rounded-full text-sm font-semibold shadow-sm border ${ui.city === c ? "bg-navy text-white border-navy" : "bg-paper border-line"}`}>
-              {c === "all" ? "전체" : CITY_LABEL[c]}
-            </button>
-          ))}
-          <button onClick={() => setFiltersOpen(true)} className="shrink-0 min-h-10 px-3.5 rounded-full text-sm font-semibold shadow-sm border bg-paper border-line">
-            필터{activeFilters ? ` ${activeFilters}` : ""}
-          </button>
-          <button onClick={() => { ui.set({ showStops: !ui.showStops }); setCenter(null); }}
-            className={`shrink-0 min-h-10 px-3.5 rounded-full text-sm font-semibold shadow-sm border ${ui.showStops ? "bg-coral text-white border-coral" : "bg-paper border-line"}`}>
-            🚏 주변 교통
-          </button>
-        </div>
-        {ui.showStops && !selected && (
-          <p className="mt-2 inline-block text-xs bg-paper/95 rounded-lg px-2 py-1 shadow-sm pointer-events-auto">
-            {center ? (ambient.isFetching ? "정류장 찾는 중…" : `반경 500m 정류장 ${ambient.data?.stops.length ?? 0}곳`) : "지도를 눌러 주변 정류장을 찾아보세요"}
-          </p>
-        )}
-        {noLoc > 0 && <p className="mt-2 inline-block text-xs bg-paper/95 rounded-lg px-2 py-1 shadow-sm pointer-events-auto ml-1">위치 미확정 {noLoc}곳은 지도에 없어요</p>}
-        {routes.length > 0 && (
-          <div className="mt-2 flex gap-1.5 pointer-events-auto">
-            <span className="text-xs bg-paper/95 rounded-lg px-2 py-1 shadow-sm">
-              <span className="text-sea font-bold">┅ 도보</span> <span className="text-[#E8833A] font-bold">━ 버스</span> <span className="text-[#7B5CC4] font-bold">━ 지하철</span>
-            </span>
-            <button className="text-xs bg-paper rounded-lg px-2 shadow-sm min-h-8" onClick={() => setRoutes([])}>경로 지우기</button>
-          </div>
-        )}
-      </div>
-
-      <Sheet open={!!selected} onClose={() => { ui.set({ selectedPlaceId: null }); setRoutes([]); setStops([]); }}
+      <Sheet open={detailOpen && !!selected} backdrop={false} onClose={() => { setDetailOpen(false); setRoutes([]); setStops([]); }}
         title={selected && <span>{CATEGORY_ICON[selected.category]} {selected.name}</span>}>
         {selected && <PlaceDetail key={selected.id} place={selected} onRoute={setRoutes} onStops={setStops}
-          onDeleted={() => ui.set({ selectedPlaceId: null })} />}
+          onDeleted={() => { setDetailOpen(false); ui.set({ selectedPlaceId: null }); }} />}
       </Sheet>
 
-      <QuickAdd at={quick} onClose={() => setQuick(null)} onSaved={(id) => { setQuick(null); ui.set({ selectedPlaceId: id }); }} />
+      <QuickAdd init={quick} onClose={() => setQuick(null)} onSaved={(id) => {
+        setQuick(null); ui.set({ selectedPlaceId: id, city: "all", day: "all" }); setDetailOpen(true);
+      }} />
 
       <Sheet open={filtersOpen} onClose={() => setFiltersOpen(false)} title="지도 필터">
         <div className="space-y-4">
-          <FilterRow label="날짜" value={String(ui.day)} onChange={(v) => ui.set({ day: v === "all" ? "all" : Number(v) })}
-            options={[["all", "전체"], ...(it.data?.days ?? []).map((d) => [String(d.day_number), `DAY ${d.day_number}`] as [string, string])]} />
-          <FilterRow label="분류" value={ui.category} onChange={(v) => ui.set({ category: v })}
-            options={[["all", "전체"], ...Object.entries(CATEGORY_LABEL)]} />
-          <FilterRow label="등록자" value={ui.creator} onChange={(v) => ui.set({ creator: v as never })}
-            options={[["all", "모두"], ["me", "내가"], ["partner", "상대가"]]} />
-          <FilterRow label="일정" value={ui.scheduled} onChange={(v) => ui.set({ scheduled: v as never })}
-            options={[["all", "모두"], ["yes", "배정됨"], ["no", "미배정"]]} />
+          <FilterRow label="분류" value={ui.category} onChange={(v) => ui.set({ category: v })} options={[["all", "전체"], ...Object.entries(CATEGORY_LABEL)]} />
+          <FilterRow label="등록자" value={ui.creator} onChange={(v) => ui.set({ creator: v as never })} options={[["all", "모두"], ["me", "내가"], ["partner", "상대가"]]} />
+          <FilterRow label="일정" value={ui.scheduled} onChange={(v) => ui.set({ scheduled: v as never })} options={[["all", "모두"], ["yes", "배정됨"], ["no", "미배정"]]} />
           <label className="flex items-center gap-3 min-h-11">
             <input type="checkbox" className="w-5 h-5 accent-coral" checked={ui.hideVisited} onChange={(e) => ui.set({ hideVisited: e.target.checked })} />
             방문 완료한 곳 숨기기
           </label>
-          <button className="btn btn-ghost w-full" onClick={() => ui.set({ day: "all", category: "all", creator: "all", scheduled: "all", hideVisited: false })}>초기화</button>
+          <button className="btn btn-ghost w-full" onClick={() => ui.set({ category: "all", creator: "all", scheduled: "all", hideVisited: false })}>초기화</button>
         </div>
       </Sheet>
     </div>
   );
+}
+
+function Chip({ on, onClick, children, dot }: { on: boolean; onClick: () => void; children: React.ReactNode; dot?: string }) {
+  return (
+    <button onClick={onClick}
+      className={`shrink-0 min-h-10 px-3.5 rounded-full text-sm font-semibold shadow-float flex items-center gap-1.5 transition-colors ${on ? "bg-navy text-white" : "glass text-navy"}`}>
+      {dot && <span className="w-2 h-2 rounded-full" style={{ background: dot }} />}{children}
+    </button>
+  );
+}
+
+function Pill({ children }: { children: React.ReactNode }) {
+  return <span className="pointer-events-auto glass shadow-float rounded-full px-3 py-1 text-xs">{children}</span>;
 }
 
 function FilterRow({ label, value, options, onChange }: { label: string; value: string; options: [string, string][]; onChange: (v: string) => void }) {

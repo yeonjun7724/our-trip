@@ -6,23 +6,43 @@ import { useItinerary, usePlaces, useTripId, useTripMutation } from "@/services/
 import type { ItineraryDay, Leg, RouteOption, TimelineEntry, TransitResult } from "@/services/types";
 import { EmptyState, ErrorState, Header, InlineError, ListSkeleton, Notice, Segmented, Sheet, SourceBadge } from "@/components/ui";
 import TransitResults from "@/features/transit/TransitResults";
+import Icon, { type IconName } from "@/components/Icon";
+import { toast } from "@/components/Toast";
 
 const CONN_STYLE: Record<string, string> = {
   LIKELY_OK: "bg-[#E9F5EE] text-ok", BUFFER_SHORT: "bg-[#FFF4E0] text-warn", MISSED: "bg-[#FDE8E6] text-bad",
   UNVERIFIED: "bg-line text-navy-soft", TIMETABLE_UNVERIFIED: "bg-line text-navy-soft", INSUFFICIENT_DATA: "bg-line text-muted",
 };
 
+const MODE_STYLE: Record<string, { icon: IconName; color: string }> = {
+  WALK: { icon: "walk", color: "#2F6FDE" }, TRANSIT: { icon: "bus", color: "#E8833A" }, BUS: { icon: "bus", color: "#E8833A" },
+  SUBWAY: { icon: "route", color: "#7B5CC4" }, TRAIN: { icon: "train", color: "#1E2A44" }, UNKNOWN: { icon: "route", color: "#A3A9B6" },
+};
+
+/** Connector between two timeline nodes: mode, duration, source, and an action to fill unknown legs. */
 function LegRow({ leg, onTransit }: { leg: Leg; onTransit?: () => void }) {
   const known = leg.duration_minutes != null;
+  const st = MODE_STYLE[leg.mode] ?? MODE_STYLE.UNKNOWN;
+  const line = !known
+    ? "repeating-linear-gradient(#C9CED8 0 4px, transparent 4px 8px)"
+    : leg.mode === "WALK" ? `repeating-linear-gradient(${st.color} 0 3px, transparent 3px 7px)` : `linear-gradient(${st.color}, ${st.color})`;
   return (
-    <div className="flex items-center gap-2 pl-4 ml-[22px] border-l-2 border-dashed border-line py-2 text-xs">
-      <span className="text-navy-soft">{leg.mode === "WALK" ? "🚶" : leg.mode === "UNKNOWN" ? "❔" : "🚌"} {MODE_LABEL[leg.mode] ?? leg.mode}
-        {known ? ` ${minutes(leg.duration_minutes)}` : " 시간 미확인"}{leg.distance_m ? ` · ${km(leg.distance_m)}` : ""}</span>
-      {leg.summary && <span className="text-muted truncate">{leg.summary}</span>}
-      {known && <SourceBadge status={(leg.status as never) ?? "ESTIMATED"} provider={leg.source} at={leg.mode !== "WALK" ? leg.checked_at : undefined} />}
-      {onTransit && (leg.suggest_transit || !known || leg.mode !== "WALK") && (
-        <button className="ml-auto text-coral font-semibold min-h-9 px-1 shrink-0" onClick={onTransit}>{leg.mode !== "WALK" && known ? "다시 조회" : "대중교통"}</button>
-      )}
+    <div className="flex items-stretch gap-3 min-h-12">
+      <div className="w-14 shrink-0" />
+      <div className="w-6 shrink-0 flex justify-center"><span className="w-0.5" style={{ backgroundImage: line }} /></div>
+      <div className="flex-1 min-w-0 flex items-center gap-2 flex-wrap py-1.5">
+        <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold text-white" style={{ background: st.color }}>
+          <Icon name={st.icon} size={14} />{MODE_LABEL[leg.mode] ?? leg.mode} {known ? minutes(leg.duration_minutes) : "미확인"}
+        </span>
+        {leg.distance_m ? <span className="text-xs text-muted">{km(leg.distance_m)}</span> : null}
+        {leg.summary && <span className="text-xs text-navy-soft truncate max-w-[60%]">{leg.summary}</span>}
+        {known && <SourceBadge status={(leg.status as never) ?? "ESTIMATED"} provider={leg.source} at={leg.mode !== "WALK" ? leg.checked_at : undefined} />}
+        {onTransit && (leg.suggest_transit || !known || leg.mode !== "WALK") && (
+          <button className="ml-auto text-xs text-coral font-bold min-h-9 px-3 rounded-full bg-coral-soft" onClick={onTransit}>
+            {leg.mode !== "WALK" && known ? "다시 조회" : leg.suggest_transit ? "대중교통이 나을 수도" : "이동 방법 찾기"}
+          </button>
+        )}
+      </div>
     </div>
   );
 }
@@ -31,59 +51,79 @@ function Entry({ e, prev, idx, count, onMove, onRemove, onTransit }: {
   e: TimelineEntry; prev: TimelineEntry | null; idx: number; count: number;
   onMove: (d: -1 | 1) => void; onRemove: () => void; onTransit: (from: TimelineEntry | null, to: TimelineEntry) => void;
 }) {
-  const [fixOpen, setFixOpen] = useState(false);
+  const [menu, setMenu] = useState(false);
   const [fixTime, setFixTime] = useState(e.start ?? "12:00");
   const patch = useTripMutation((body: Record<string, unknown>) => api.patch(`/api/itinerary-items/${e.item_id}`, { version: e.version, ...body }));
   const [optimistic, setOptimistic] = useState<boolean | null>(null);
   useEffect(() => setOptimistic(null), [e.version]);
   const visited = optimistic ?? e.visit_status === "VISITED";
+  const rail = e.kind === "RAIL";
+  const toggle = () => {
+    const next = !visited;
+    setOptimistic(next);
+    patch.mutate({ visit_status: next ? "VISITED" : "PLANNED" }, { onError: () => setOptimistic(null) });
+    if (next) toast(rail ? "탑승 완료 🚆" : `'${e.name}' 방문 완료!`);
+  };
   return (
     <li>
       {e.leg_in && <LegRow leg={e.leg_in} onTransit={() => onTransit(prev, e)} />}
-      <div className={`card p-3 flex gap-3 ${visited ? "opacity-60" : ""} ${e.kind === "RAIL" ? "border-navy/40 bg-[#F4F6FB]" : ""}`}>
-        <div className="w-12 shrink-0 text-center">
-          <p className="font-mono font-bold text-sm">{e.kind === "RAIL" ? e.departure ?? "–" : e.start ?? "–:–"}</p>
-          {e.kind === "PLACE" && e.end && <p className="font-mono text-[11px] text-muted">~{e.end}</p>}
-          {e.kind === "RAIL" && <p className="font-mono text-[11px] text-muted">→{e.arrival ?? "–"}</p>}
+      <div className="flex items-start gap-3">
+        <div className="w-14 shrink-0 text-right pt-2.5">
+          <p className="font-mono font-bold text-[15px] leading-none">{rail ? e.departure ?? "–" : e.start ?? "–:–"}</p>
+          {!rail && e.end && <p className="font-mono text-[11px] text-muted mt-1">~{e.end}</p>}
+          {rail && <p className="font-mono text-[11px] text-muted mt-1">→{e.arrival ?? "–"}</p>}
         </div>
-        <div className="flex-1 min-w-0">
-          <p className="font-bold truncate">{e.kind === "RAIL" ? `🚆 ${e.name}` : `${CATEGORY_ICON[e.category ?? ""] ?? "📍"} ${e.name}`}</p>
-          {e.kind === "RAIL" ? (
+        <button onClick={toggle} aria-label={rail ? "탑승 완료" : "방문 완료"} aria-pressed={visited}
+          className={`w-6 h-6 mt-2 shrink-0 rounded-full border-[2.5px] flex items-center justify-center transition-colors ${
+            visited ? "bg-ok border-ok text-white" : rail ? "bg-navy border-navy text-white" : "bg-paper border-coral"}`}>
+          {visited ? <Icon name="check" size={14} stroke={3} /> : rail ? <Icon name="train" size={12} /> : null}
+        </button>
+        <div className={`flex-1 min-w-0 card p-3 transition-opacity ${visited ? "opacity-60" : ""} ${rail ? "!bg-[#F2F5FB] !border-navy/25" : ""}`}>
+          <div className="flex items-start gap-2">
+            <p className={`font-bold flex-1 min-w-0 ${visited ? "line-through" : ""}`}>{rail ? e.name : `${CATEGORY_ICON[e.category ?? ""] ?? "📍"} ${e.name}`}</p>
+            <button className="tap -m-2 flex items-center justify-center text-muted" aria-label="더보기" aria-expanded={menu} onClick={() => setMenu(!menu)}><Icon name="menu" size={18} /></button>
+          </div>
+          {rail ? (
             <>
               <p className="text-xs text-navy-soft">{e.origin} → {e.destination} · {e.reservation_status === "RESERVED" ? "예매 완료" : e.reservation_status === "CANCELLED" ? "취소" : "예매 전"}</p>
-              <p className="text-xs mt-1">역 도착 예상 {e.arrival_at_station ?? "미확인"}{e.slack_minutes != null ? ` · 여유 ${e.slack_minutes}분` : ""} (버퍼 {e.buffer_minutes}분)</p>
-              <span className={`chip mt-1 ${CONN_STYLE[e.connection ?? ""] ?? "bg-line"}`}>{e.connection_label}</span>
-              {e.connection_note && <p className="text-[11px] text-muted mt-0.5">{e.connection_note}</p>}
-              <div className="mt-1"><SourceBadge status={e.schedule_source === "TAGO_TIMETABLE" ? "SCHEDULED" : "USER_ENTERED"} provider={e.schedule_source} /></div>
+              <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
+                <span className={`chip ${CONN_STYLE[e.connection ?? ""] ?? "bg-line"}`}>{e.connection_label}</span>
+                <span className="text-xs text-navy-soft">역 도착 {e.arrival_at_station ?? "미확인"}{e.slack_minutes != null ? ` · 여유 ${e.slack_minutes}분` : ""}</span>
+              </div>
+              {e.connection_note && <p className="text-[11px] text-muted mt-1">{e.connection_note}</p>}
+              <div className="mt-1.5"><SourceBadge status={e.schedule_source === "TAGO_TIMETABLE" ? "SCHEDULED" : "USER_ENTERED"} provider={e.schedule_source} /></div>
             </>
           ) : (
             <>
-              <p className="text-xs text-muted">머무는 시간 {minutes(e.stay_minutes)}{e.is_fixed ? " · 📌 고정" : ""}{!e.has_location ? " · 위치 미확정" : ""}
-                {e.start && <span> · 추정</span>}</p>
-              {e.conflict && <p className="text-xs text-bad mt-0.5">⚠ {e.conflict}</p>}
+              <div className="flex flex-wrap gap-1 mt-1">
+                <span className="chip bg-sand text-navy-soft"><Icon name="clock" size={12} /> {minutes(e.stay_minutes)}</span>
+                {e.is_fixed && <span className="chip bg-navy text-white">📌 {e.start} 고정</span>}
+                {!e.has_location && <span className="chip bg-[#FFF4E0] text-warn">위치 미정</span>}
+                {e.start && !e.is_fixed && <span className="chip bg-[#FFF4E0] text-warn">추정 시각</span>}
+              </div>
+              {e.conflict && <p className="text-xs text-bad mt-1">⚠ {e.conflict}</p>}
             </>
           )}
-          <div className="flex flex-wrap gap-1 mt-2">
-            <button className="btn btn-ghost !min-h-9 text-xs" aria-label="위로" disabled={idx === 0} onClick={() => onMove(-1)}>▲</button>
-            <button className="btn btn-ghost !min-h-9 text-xs" aria-label="아래로" disabled={idx === count - 1} onClick={() => onMove(1)}>▼</button>
-            {e.kind === "PLACE" && <>
-              <button className="btn btn-ghost !min-h-9 text-xs" onClick={() => e.is_fixed ? patch.mutate({ is_fixed: false, clear_planned_start: true }) : setFixOpen(!fixOpen)}>{e.is_fixed ? "고정 해제" : "시간 고정"}</button>
-              <button className="btn btn-ghost !min-h-9 text-xs" onClick={onRemove}>빼기</button>
-            </>}
-          </div>
-          {fixOpen && (
-            <div className="flex gap-2 mt-2">
-              <input type="time" className="field !min-h-9" value={fixTime} onChange={(ev) => setFixTime(ev.target.value)} aria-label="고정 시각" />
-              <button className="btn btn-primary !min-h-9 text-sm" onClick={() => { patch.mutate({ is_fixed: true, planned_start: fixTime }); setFixOpen(false); }}>저장</button>
+          {menu && (
+            <div className="mt-2 pt-2 border-t border-line space-y-2 fade-in">
+              <div className="flex flex-wrap gap-1.5">
+                <button className="btn btn-ghost !min-h-9 text-xs" disabled={idx === 0} onClick={() => onMove(-1)}><Icon name="up" size={14} />위로</button>
+                <button className="btn btn-ghost !min-h-9 text-xs" disabled={idx === count - 1} onClick={() => onMove(1)}><Icon name="down" size={14} />아래로</button>
+                {!rail && <button className="btn btn-ghost !min-h-9 text-xs text-bad" onClick={onRemove}><Icon name="x" size={14} />이 날에서 빼기</button>}
+              </div>
+              {!rail && (e.is_fixed ? (
+                <button className="btn btn-outline !min-h-9 text-xs" onClick={() => patch.mutate({ is_fixed: false, clear_planned_start: true })}>시간 고정 해제</button>
+              ) : (
+                <div className="flex gap-2 items-center">
+                  <span className="text-xs text-muted">시간 고정</span>
+                  <input type="time" className="field !min-h-9 !w-32" value={fixTime} onChange={(ev) => setFixTime(ev.target.value)} aria-label="고정 시각" />
+                  <button className="btn btn-primary !min-h-9 text-xs" onClick={() => { patch.mutate({ is_fixed: true, planned_start: fixTime }); setMenu(false); }}>저장</button>
+                </div>
+              ))}
             </div>
           )}
           {patch.error instanceof ApiError && patch.error.status === 409 && <p className="text-xs text-warn mt-1">다른 사람이 먼저 바꿨어요. 최신 상태로 새로고침했어요.</p>}
         </div>
-        <label className="shrink-0 flex flex-col items-center gap-0.5 text-[10px] text-muted min-w-11 cursor-pointer">
-          <input type="checkbox" className="w-6 h-6 accent-ok" checked={visited} aria-label="방문 완료"
-            onChange={(ev) => { setOptimistic(ev.target.checked); patch.mutate({ visit_status: ev.target.checked ? "VISITED" : "PLANNED" }, { onError: () => setOptimistic(null) }); }} />
-          {e.kind === "RAIL" ? "탑승" : "방문"}
-        </label>
       </div>
     </li>
   );
@@ -143,7 +183,7 @@ function DayView({ day }: { day: ItineraryDay }) {
       {day.entries.length === 0 ? (
         <EmptyState icon="🗓️" title="이 날 일정이 비어 있어요" body="아래 미배정 장소에서 넣거나 위시리스트에서 날짜를 골라 주세요." />
       ) : (
-        <ol className="space-y-0">
+        <ol className="space-y-0 pt-1">
           {day.entries.map((e, i) => (
             <Entry key={e.item_id} e={e} prev={i ? day.entries[i - 1] : null} idx={i} count={day.entries.length}
               onMove={(d) => move(i, d)} onRemove={() => write.mutate(ids.filter((x) => x.item_id !== e.item_id))} onTransit={openTransit} />

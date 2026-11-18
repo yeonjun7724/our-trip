@@ -8,6 +8,7 @@ const STYLE_URL = "https://tiles.openfreemap.org/styles/positron";
 export interface MapMarker {
   id: string; lat: number; lon: number; label?: string; icon: string; color: string;
   kind: "place" | "stop" | "pick" | "station"; dim?: boolean; selected?: boolean;
+  badge?: string | null; heart?: boolean; done?: boolean;
 }
 export interface RouteFeature {
   geometry: { type: "LineString"; coordinates: number[][] };
@@ -29,9 +30,10 @@ function strip3D(map: MLMap) {
 }
 
 export default function MapView({
-  markers, routes = [], fit, center = [129.07, 35.15], zoom = 11, onSelect, onPick, showLocate = true, className = "",
+  markers, routes = [], fit, focus, center = [129.07, 35.15], zoom = 11, onSelect, onPick, showLocate = true, className = "", bottomPad = 220,
 }: {
   markers: MapMarker[]; routes?: RouteFeature[]; fit?: [number, number][] | null; center?: [number, number]; zoom?: number;
+  focus?: { lat: number; lon: number; zoom?: number; key: string } | null; bottomPad?: number;
   onSelect?: (id: string, kind: MapMarker["kind"]) => void; onPick?: (lat: number, lon: number) => void;
   showLocate?: boolean; className?: string;
 }) {
@@ -85,15 +87,22 @@ export default function MapView({
     markerObjs.current = markers.map((mk) => {
       const node = document.createElement("button");
       node.type = "button";
-      node.setAttribute("aria-label", mk.label ?? mk.kind);
-      const size = mk.kind === "stop" ? 26 : mk.kind === "pick" ? 34 : 34;
-      node.style.cssText = `display:flex;flex-direction:column;align-items:center;background:none;border:0;padding:0;cursor:pointer;opacity:${mk.dim ? 0.45 : 1};`;
-      node.innerHTML = `<span style="width:${size}px;height:${size}px;border-radius:9999px;display:flex;align-items:center;justify-content:center;
-        background:${mk.kind === "stop" ? "#fff" : mk.color};color:#fff;border:${mk.kind === "stop" ? `2px solid ${mk.color}` : "2px solid #fff"};
-        box-shadow:0 1px 4px rgba(30,42,68,.35);font-size:${mk.kind === "stop" ? 13 : 16}px;${mk.selected ? "outline:3px solid #EE6C4D;outline-offset:1px;" : ""}">${mk.icon}</span>
-        ${mk.label && mk.kind !== "stop" ? `<span style="margin-top:2px;max-width:110px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:11px;font-weight:700;color:#1E2A44;background:rgba(255,255,255,.9);padding:0 4px;border-radius:6px">${escapeHtml(mk.label)}</span>` : ""}`;
+      if (mk.kind === "stop") {
+        node.className = "ot-stop";
+        node.style.color = mk.color;
+        node.textContent = mk.icon;
+      } else {
+        node.className = `ot-pin${mk.selected ? " sel" : ""}${mk.done ? " done" : ""}${mk.kind === "pick" ? " pop" : ""}`;
+        node.style.opacity = mk.dim ? "0.45" : "1";
+        node.innerHTML = `<span class="pinwrap"><span class="head" style="background:${mk.color}"><span>${mk.icon}</span></span>`
+          + (mk.done ? `<span class="badge" style="background:#2E8B57">✓</span>` : mk.badge ? `<span class="badge">${escapeHtml(mk.badge)}</span>` : "")
+          + (mk.heart ? `<span class="heart">💕</span>` : "") + `</span>`
+          + (mk.label ? `<span class="lbl">${escapeHtml(mk.label)}</span>` : "");
+        if (mk.selected) node.style.zIndex = "5";
+      }
       node.addEventListener("click", (ev) => { ev.stopPropagation(); selRef.current?.(mk.id, mk.kind); });
-      const marker = new maplibregl.Marker({ element: node, anchor: mk.kind === "stop" ? "center" : "top", offset: mk.kind === "stop" ? [0, 0] : [0, -17] })
+      const marker = new maplibregl.Marker({ element: node, anchor: mk.kind === "stop" ? "center" : "bottom",
+        offset: mk.kind === "stop" ? [0, 0] : [0, mk.label ? 4 : -2] })
         .setLngLat([mk.lon, mk.lat]).addTo(m);
       // MapLibre replaces aria-label with a generic "Map marker"; restore the place/stop name
       marker.getElement().setAttribute("aria-label", mk.label || (mk.kind === "stop" ? "정류장" : "장소"));
@@ -123,10 +132,19 @@ export default function MapView({
       if (fit.length === 1) { m.easeTo({ center: [fit[0][1], fit[0][0]], zoom: Math.max(m.getZoom(), 15) }); return; }
       const b = new maplibregl.LngLatBounds();
       fit.forEach(([lat, lon]) => b.extend([lon, lat]));
-      m.fitBounds(b, { padding: { top: 60, bottom: 220, left: 40, right: 40 }, maxZoom: 16, duration: 500 });
+      m.fitBounds(b, { padding: { top: 120, bottom: bottomPad, left: 40, right: 40 }, maxZoom: 16, duration: 600 });
     };
     if (loaded.current) go(); else m.once("ourtrip:ready", go);
   }, [fit]);
+
+  useEffect(() => {
+    const m = map.current;
+    if (!m || !focus) return;
+    const go = () => m.easeTo({ center: [focus.lon, focus.lat], zoom: Math.max(m.getZoom(), focus.zoom ?? 14.5),
+      padding: { top: 100, bottom: bottomPad, left: 0, right: 0 }, duration: 650 });
+    if (loaded.current) go(); else m.once("ourtrip:ready", go);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [focus?.key]);
 
   return <div ref={el} className={`w-full h-full ${className}`} />;
 }

@@ -72,3 +72,37 @@ input, select, textarea { font-size: 16px; }
 
 .maplibregl-ctrl-attrib { font-size: 10px; }
 .maplibregl-ctrl-bottom-right, .maplibregl-ctrl-bottom-left { bottom: 0; }
+
+/* ---- motion (disabled for reduced-motion users) ---- */
+@keyframes sheetIn { from { transform: translateY(100%); } to { transform: translateY(0); } }
+@keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
+@keyframes toastIn { from { transform: translateY(-12px); opacity: 0 } to { transform: none; opacity: 1 } }
+@keyframes pop { 0% { transform: scale(.6) } 70% { transform: scale(1.12) } 100% { transform: scale(1) } }
+.sheet-in { animation: sheetIn .32s cubic-bezier(.2,.8,.2,1); }
+.fade-in { animation: fadeIn .2s ease-out; }
+.toast-in { animation: toastIn .22s ease-out; }
+.pop { animation: pop .3s ease-out; }
+@media (prefers-reduced-motion: reduce) { .sheet-in, .fade-in, .toast-in, .pop { animation: none } }
+
+.glass { background: rgba(255,255,255,.92); backdrop-filter: saturate(1.4) blur(12px); -webkit-backdrop-filter: saturate(1.4) blur(12px); }
+.shadow-float { box-shadow: 0 6px 24px rgba(30,42,68,.16), 0 1px 3px rgba(30,42,68,.12); }
+.snap-x-cards { scroll-snap-type: x mandatory; scroll-padding: 0 16px; }
+.snap-x-cards > * { scroll-snap-align: start; }
+.hero-grad { background: linear-gradient(135deg, #EE6C4D 0%, #F39A5B 55%, #F6C36A 100%); }
+
+/* Map pins */
+.ot-pin { position: relative; display: flex; flex-direction: column; align-items: center; background: none; border: 0; padding: 0; cursor: pointer; }
+.ot-pin .pinwrap { position: relative; width: 36px; height: 36px; }
+.ot-pin .head { width: 36px; height: 36px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); display: flex; align-items: center; justify-content: center;
+  border: 2.5px solid #fff; box-shadow: 0 3px 10px rgba(30,42,68,.35); transition: transform .18s; }
+.ot-pin .head > span { transform: rotate(45deg); font-size: 16px; line-height: 1; }
+.ot-pin.sel .head { transform: rotate(-45deg) scale(1.22); box-shadow: 0 0 0 4px rgba(238,108,77,.45), 0 4px 14px rgba(30,42,68,.4); }
+.ot-pin .badge { position: absolute; top: -6px; right: -8px; min-width: 18px; height: 18px; padding: 0 4px; border-radius: 9px; background: #1E2A44; color: #fff;
+  font: 700 10px/18px var(--font-sans); text-align: center; border: 1.5px solid #fff; }
+.ot-pin .heart { position: absolute; top: -6px; left: -8px; font-size: 13px; filter: drop-shadow(0 1px 1px rgba(0,0,0,.3)); }
+.ot-pin .lbl { margin-top: 3px; max-width: 110px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font: 700 11px var(--font-sans); color: #1E2A44;
+  background: rgba(255,255,255,.94); padding: 1px 6px; border-radius: 8px; box-shadow: 0 1px 3px rgba(30,42,68,.18); }
+.ot-pin.done .head { filter: grayscale(.7); opacity: .65; }
+.ot-stop { width: 26px; height: 26px; border-radius: 9px; background: #fff; display: flex; align-items: center; justify-content: center; font-size: 14px;
+  border: 2px solid currentColor; box-shadow: 0 2px 6px rgba(30,42,68,.3); cursor: pointer; padding: 0; }
+@media (max-width: 640px) { .maplibregl-ctrl-top-right .maplibregl-ctrl-group:first-child { display: none; } }

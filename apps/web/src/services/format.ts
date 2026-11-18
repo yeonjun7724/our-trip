@@ -13,7 +13,7 @@ export const CATEGORY_LABEL: Record<string, string> = {
   ATTRACTION: "관광지", CAFE: "카페", FOOD: "음식점", LODGING: "숙소", SHOPPING: "쇼핑", STATION: "역", ETC: "기타",
 };
 export const CATEGORY_ICON: Record<string, string> = {
-  ATTRACTION: "📍", CAFE: "☕", FOOD: "🍜", LODGING: "🛏️", SHOPPING: "🛍️", STATION: "🚉", ETC: "•",
+  ATTRACTION: "📸", CAFE: "☕", FOOD: "🍜", LODGING: "🛏️", SHOPPING: "🛍️", STATION: "🚉", ETC: "•",
 };
 
 export const STATUS_LABEL: Record<DataStatus, string> = {

@@ -2,9 +2,11 @@ import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { api, ApiError } from "@/services/api";
 import { CATEGORY_LABEL, km, minutes, PREF_LABEL, PREF_STYLE, ago } from "@/services/format";
-import { useItinerary, usePlaces, useTripId, useTripMutation } from "@/services/queries";
+import { useItinerary, usePlaces, useTrip, useTripId, useTripMutation } from "@/services/queries";
 import type { Place, Pref, TransitResult } from "@/services/types";
-import { InlineError, Notice, SourceBadge } from "@/components/ui";
+import { Avatar, InlineError, Notice, SourceBadge } from "@/components/ui";
+import Icon from "@/components/Icon";
+import { toast } from "@/components/Toast";
 import type { RouteFeature } from "@/components/MapView";
 import LocationPicker from "@/components/LocationPicker";
 import NearbyStops from "@/features/transit/NearbyStops";
@@ -30,14 +32,17 @@ export default function PlaceDetail({ place, onRoute, onStops, onDeleted }: {
   const [geoErr, setGeoErr] = useState<string | null>(null);
   const [myPos, setMyPos] = useState<{ lat: number; lon: number } | null>(null);
 
-  const vote = useTripMutation((p: Pref | null) => api.post(`/api/places/${place.id}/votes`, { preference: p }));
-  const patch = useTripMutation((body: Record<string, unknown>) => api.patch(`/api/places/${place.id}`, { version: place.version, ...body }));
-  const del = useTripMutation(() => api.del(`/api/places/${place.id}`), () => onDeleted?.());
+  const vote = useTripMutation((p: Pref | null) => api.post(`/api/places/${place.id}/votes`, { preference: p }),
+    () => toast("내 선호도를 저장했어요"));
+  const trip = useTrip(tripId).data;
+  const midx = Object.fromEntries((trip?.members ?? []).map((m, i) => [m.id, i]));
+  const patch = useTripMutation((body: Record<string, unknown>) => api.patch(`/api/places/${place.id}`, { version: place.version, ...body }), () => toast("저장했어요"));
+  const del = useTripMutation(() => api.del(`/api/places/${place.id}`), () => { toast("삭제했어요"); onDeleted?.(); });
   const assign = useTripMutation((dayId: string) => {
     const d = it!.days.find((x) => x.id === dayId)!;
     return api.post(`/api/trips/${tripId}/itinerary`, { day_id: d.id, base_version: d.version,
       items: [...d.entries.map((e) => ({ item_id: e.item_id })), { place_id: place.id }] });
-  });
+  }, () => toast("일정에 넣었어요 🗓️"));
 
   const origins = places.filter((p) => p.has_location && p.id !== place.id);
   const origin = originId === "me" ? (myPos ? { ...myPos, label: "현재 위치" } : null)
@@ -70,12 +75,28 @@ export default function PlaceDetail({ place, onRoute, onStops, onDeleted }: {
         {place.created_by ?? "?"} 등록{place.updated_by && place.updated_by !== place.created_by ? ` · ${place.updated_by} 수정` : ""} · {ago(place.updated_at)}
       </p>
 
+      <div className="grid grid-cols-4 gap-2">
+        {[
+          { i: "walk" as const, l: "도보", on: () => document.getElementById("pd-route")?.scrollIntoView({ behavior: "smooth" }), dis: !dest },
+          { i: "calendar" as const, l: assignedDay ? `DAY ${assignedDay.day_number}` : "일정", on: () => document.getElementById("pd-plan")?.scrollIntoView({ behavior: "smooth" }), dis: false },
+          { i: "bus" as const, l: "정류장", on: () => { setShowStops(true); setTimeout(() => document.getElementById("pd-stops")?.scrollIntoView({ behavior: "smooth" }), 50); }, dis: !dest },
+          { i: "share" as const, l: "공유", on: async () => {
+              const url = place.share_url ?? place.external_links[0]?.url ?? location.href;
+              if (navigator.share) { try { await navigator.share({ title: place.name, url }); } catch { /* cancelled */ } }
+              else { await navigator.clipboard?.writeText(url); toast("링크를 복사했어요"); } }, dis: false },
+        ].map((a) => (
+          <button key={a.l} disabled={a.dis} onClick={a.on} className="card py-2.5 flex flex-col items-center gap-1 text-xs font-semibold disabled:opacity-40 active:bg-sand">
+            <span className="w-9 h-9 rounded-full bg-coral-soft text-coral flex items-center justify-center"><Icon name={a.i} size={18} /></span>{a.l}
+          </button>
+        ))}
+      </div>
+
       <section>
         <h3 className="font-bold mb-2">우리 선호도</h3>
         <div className="grid grid-cols-2 gap-2">
-          {place.votes.map((v) => (
+          {place.votes.filter((v) => v.preference || v.is_me).map((v) => (
             <div key={v.member_id} className="card px-3 py-2">
-              <p className="text-xs text-muted">{v.nickname}{v.is_me ? " (나)" : ""}</p>
+              <p className="text-xs text-muted flex items-center gap-1.5"><Avatar name={v.nickname} index={midx[v.member_id] ?? 0} size={18} />{v.nickname}{v.is_me ? " (나)" : ""}</p>
               <p className="font-semibold text-sm">{v.preference ? PREF_LABEL[v.preference] : "아직 안 골랐어요"}</p>
             </div>
           ))}
@@ -83,14 +104,15 @@ export default function PlaceDetail({ place, onRoute, onStops, onDeleted }: {
         <div className="grid grid-cols-4 gap-1.5 mt-2" role="radiogroup" aria-label="내 선호도">
           {(["MUST", "GOOD", "MAYBE", "SKIP"] as Pref[]).map((p) => (
             <button key={p} role="radio" aria-checked={place.my_vote === p}
-              className={`min-h-11 rounded-xl text-[13px] font-semibold border ${place.my_vote === p ? PREF_STYLE[p] + " border-transparent" : "bg-paper border-line"}`}
-              onClick={() => vote.mutate(place.my_vote === p ? null : p)}>{PREF_LABEL[p]}</button>
+              className={`min-h-14 rounded-2xl text-[12px] font-semibold border flex flex-col items-center justify-center gap-0.5 transition-colors ${place.my_vote === p ? PREF_STYLE[p] + " border-transparent" : "bg-paper border-line"}`}
+              onClick={() => vote.mutate(place.my_vote === p ? null : p)}>
+              <span className={`text-lg leading-none ${place.my_vote === p ? "pop" : ""}`}>{({ MUST: "😍", GOOD: "🙂", MAYBE: "🤔", SKIP: "🙅" } as const)[p]}</span>{PREF_LABEL[p]}</button>
           ))}
         </div>
         <p className="text-xs text-muted mt-1">추천 점수 {place.priority_score} (참고용 지표)</p>
       </section>
 
-      <section>
+      <section id="pd-plan">
         <h3 className="font-bold mb-2">일정</h3>
         {assignedDay ? <p className="text-sm">DAY {assignedDay.day_number} {assignedDay.primary_city_label}에 들어가 있어요.</p> : (
           <div className="flex flex-wrap gap-2">
@@ -120,7 +142,7 @@ export default function PlaceDetail({ place, onRoute, onStops, onDeleted }: {
       </section>
 
       {dest && (
-        <section>
+        <section id="pd-route">
           <h3 className="font-bold mb-2">여기까지 가는 길</h3>
           <div className="flex gap-2">
             <select className="field" value={originId} onChange={(e) => { setOriginId(e.target.value); setWalk(null); setTransit(null); }} aria-label="출발지">
@@ -150,7 +172,7 @@ export default function PlaceDetail({ place, onRoute, onStops, onDeleted }: {
       )}
 
       {dest && (
-        <section>
+        <section id="pd-stops">
           <button className="flex w-full items-center justify-between min-h-11 font-bold" onClick={() => setShowStops(!showStops)} aria-expanded={showStops}>
             주변 버스·지하철 <span aria-hidden>{showStops ? "▴" : "▾"}</span>
           </button>

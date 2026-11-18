@@ -17,7 +17,7 @@ async function enter(page: Page, name: string) {
   await expect(page.getByText("누구세요?")).toBeVisible();
   await page.getByLabel("이름", { exact: true }).fill(name);
   await page.getByRole("button", { name: "시작" }).click();
-  await expect(page.getByText("지도를 눌러 장소 추가")).toBeVisible();
+  await expect(page.getByLabel("장소 검색")).toBeVisible();
 }
 
 test("방 만들기 없이 지도에서 바로: 이름 선택 → 지도 탭으로 장소 추가 → 함께 투표·일정", async ({ browser }) => {
@@ -63,6 +63,7 @@ test("방 만들기 없이 지도에서 바로: 이름 선택 → 지도 탭으�
   await p.getByRole("button", { name: "부산", exact: true }).click();
   await p.waitForTimeout(1200);
   await p.getByRole("button", { name: "광안리", exact: true }).first().dispatchEvent("click");
+  await p.getByRole("button", { name: "광안리", exact: true }).first().dispatchEvent("click");
   await expect(p.getByRole("dialog")).toBeVisible();
   await p.getByLabel("출발지").selectOption({ label: "해운대" });
   await p.getByRole("button", { name: "🚶 도보 경로" }).click();
@@ -77,7 +78,7 @@ test("방 만들기 없이 지도에서 바로: 이름 선택 → 지도 탭으�
   const again = await newPhone(browser);
   await again.page.goto("/");
   await again.page.getByRole("button", { name: `지은${stamp}` }).click();
-  await expect(again.page.getByText("지도를 눌러 장소 추가")).toBeVisible();
+  await expect(again.page.getByLabel("장소 검색")).toBeVisible();
 
   // itinerary: partner checks the place visited after owner schedules it
   await g.goto("/itinerary");
@@ -95,8 +96,8 @@ for (const w of WIDTHS) {
     await noHorizontalScroll(page);
     for (const path of ["/", "/home", "/wishlist", "/itinerary", "/transit", "/transit?tab=stops", "/transit?tab=pass", "/places/new", "/settings"]) {
       await page.goto(path);
-      await page.waitForLoadState("networkidle").catch(() => {});
-      await page.waitForTimeout(400);
+      await page.waitForLoadState("domcontentloaded");
+      await page.waitForTimeout(900);
       await noHorizontalScroll(page);
       const name = path.replace(/[/?=]/g, "_") || "_home";
       await page.screenshot({ path: `e2e-results/w${w}${name}.png` });

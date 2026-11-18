@@ -1,4 +1,5 @@
-import { type ReactNode, useEffect, useRef } from "react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
+import Icon from "./Icon";
 import { createPortal } from "react-dom";
 import { ApiError } from "@/services/api";
 import { PROVIDER_LABEL, STATUS_LABEL, ago } from "@/services/format";
@@ -61,11 +62,17 @@ export function SourceBadge({ status, provider, at }: { status: DataStatus; prov
   );
 }
 
-export function Sheet({ open, onClose, title, children, tall = false }: {
-  open: boolean; onClose: () => void; title?: ReactNode; children: ReactNode; tall?: boolean;
+/**
+ * Bottom sheet with two snap heights. Drag the handle/header: up → full, down → half → close.
+ * Rendered in a portal so fixed parents can't trap it under the bottom nav.
+ */
+export function Sheet({ open, onClose, title, children, tall = false, backdrop = true }: {
+  open: boolean; onClose: () => void; title?: ReactNode; children: ReactNode; tall?: boolean; backdrop?: boolean;
 }) {
-  const ref = useRef<HTMLDivElement>(null);
+  const [snap, setSnap] = useState<"half" | "full">(tall ? "full" : "half");
+  const [drag, setDrag] = useState(0);
   const startY = useRef<number | null>(null);
+  useEffect(() => { if (open) setSnap(tall ? "full" : "half"); }, [open, tall]);
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
@@ -73,30 +80,54 @@ export function Sheet({ open, onClose, title, children, tall = false }: {
     return () => window.removeEventListener("keydown", onKey);
   }, [open, onClose]);
   if (!open) return null;
-  // Portal: parents with position:fixed create stacking contexts that would put the nav above the sheet
+  const end = () => {
+    if (startY.current === null) return;
+    if (drag < -50) setSnap("full");
+    else if (drag > 70) { if (snap === "full" && !tall) setSnap("half"); else onClose(); }
+    startY.current = null;
+    setDrag(0);
+  };
+  const handlers = {
+    onPointerDown: (e: React.PointerEvent) => { startY.current = e.clientY; (e.target as HTMLElement).setPointerCapture?.(e.pointerId); },
+    onPointerMove: (e: React.PointerEvent) => { if (startY.current !== null) setDrag(e.clientY - startY.current); },
+    onPointerUp: end, onPointerCancel: end,
+  };
   return createPortal(
-    <div className="fixed inset-0 z-40 flex flex-col justify-end" role="dialog" aria-modal="true">
-      <button className="absolute inset-0 bg-navy/30" aria-label="닫기" onClick={onClose} />
+    <div className="fixed inset-0 z-40 flex flex-col justify-end pointer-events-none" role="dialog" aria-modal={backdrop}>
+      {backdrop && <button className="absolute inset-0 bg-navy/25 fade-in pointer-events-auto" aria-label="닫기" onClick={onClose} />}
       <div
-        ref={ref}
-        className={`relative bg-ivory rounded-t-3xl shadow-2xl w-full max-w-[640px] mx-auto flex flex-col ${tall ? "h-[88dvh]" : "max-h-[80dvh]"}`}
-        style={{ paddingBottom: "var(--sab)" }}
+        className="sheet-in pointer-events-auto relative bg-ivory rounded-t-[28px] shadow-[0_-8px_40px_rgba(30,42,68,.18)] w-full max-w-[640px] mx-auto flex flex-col"
+        style={{
+          height: snap === "full" ? "92dvh" : "58dvh",
+          transform: drag ? `translateY(${Math.max(drag, -80)}px)` : undefined,
+          transition: startY.current === null ? "height .28s cubic-bezier(.2,.8,.2,1), transform .2s" : "none",
+          paddingBottom: "var(--sab)",
+        }}
       >
-        <div
-          className="pt-2 pb-1 flex justify-center cursor-grab touch-none"
-          onPointerDown={(e) => (startY.current = e.clientY)}
-          onPointerUp={(e) => { if (startY.current !== null && e.clientY - startY.current > 60) onClose(); startY.current = null; }}
-        >
-          <span className="w-10 h-1.5 rounded-full bg-line" />
-        </div>
-        <div className="flex items-center gap-2 px-4 pb-2">
-          <div className="flex-1 min-w-0 font-bold text-lg truncate">{title}</div>
-          <button className="tap rounded-full text-muted" onClick={onClose} aria-label="닫기">✕</button>
+        <div className="touch-none cursor-grab select-none" {...handlers}>
+          <div className="pt-2.5 pb-1 flex justify-center"><span className="w-11 h-1.5 rounded-full bg-line" /></div>
+          <div className="flex items-center gap-2 px-4 pb-2">
+            <div className="flex-1 min-w-0 font-extrabold text-lg truncate">{title}</div>
+            <button className="tap rounded-full text-muted hover:bg-sand flex items-center justify-center" onPointerDown={(e) => e.stopPropagation()}
+              onClick={onClose} aria-label="닫기"><Icon name="x" /></button>
+          </div>
         </div>
         <div className="overflow-y-auto px-4 pb-6 flex-1 overscroll-contain">{children}</div>
       </div>
     </div>,
     document.body,
+  );
+}
+
+const MEMBER_COLORS = ["#2F6FDE", "#EE6C4D", "#0F8B8D", "#8E5CC8", "#C9821A"];
+export function memberColor(index: number) { return MEMBER_COLORS[index % MEMBER_COLORS.length]; }
+
+export function Avatar({ name, index = 0, size = 24, ring = false }: { name: string; index?: number; size?: number; ring?: boolean }) {
+  return (
+    <span className={`inline-flex items-center justify-center rounded-full text-white font-bold shrink-0 ${ring ? "ring-2 ring-paper" : ""}`}
+      style={{ width: size, height: size, background: memberColor(index), fontSize: size * 0.45 }} title={name} aria-label={name}>
+      {name.slice(0, 1)}
+    </span>
   );
 }
 
