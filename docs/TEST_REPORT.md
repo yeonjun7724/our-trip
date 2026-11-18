@@ -38,3 +38,13 @@
 - iOS Safari 실기기 테스트를 하지 못했습니다(Playwright WebKit도 설치하지 않음). Android Chrome 실기기도 테스트하지 못했습니다.
 - 실제 API 키로 TAGO 열차·버스·지하철과 ODsay를 호출해 보지 못했습니다. 키를 넣은 뒤 `scripts/check_providers.py`를 실행해야 합니다.
 - Docker 이미지는 로컬에 Docker가 없어 Railway 원격 빌드로만 확인했습니다(빌드와 기동 성공).
+
+## 실제 API 키 검증 (2026-11-18)
+
+| API | 결과 |
+|---|---|
+| TAGO 열차정보 | ✅ 정상. 도시코드는 시·도 단위(부산=21, 경상북도=37)이고 역 ID는 부산 NAT014445, 경주 NATH13421, 포항 NAT8B0351입니다. 부산→경주 내일 35편, 경주→포항 8편, 60일 뒤 날짜도 조회됩니다. 응답 필드명(`trainno, traingradename, depplacename, arrplacename, depplandtime, arrplandtime, adultcharge`)이 코드와 일치합니다. |
+| TAGO 버스도착정보 | ✅ 정상. 도시코드는 부산=21, 경주=37020, 포항=37010이며 세 도시 모두 지원됩니다. |
+| TAGO 지하철정보 | ✅ 정상 (서면 → MTRBS10119 1호선 / MTRBS20219 2호선) |
+| TAGO 버스정류소정보 | ❌ `SERVICE_KEY_IS_NOT_REGISTERED_ERROR`. 이 API(15098534)는 활용신청이 안 됐거나 아직 반영되지 않았습니다. 그동안 주변 정류장은 OSM 데이터로만 보여줍니다. |
+| ODsay | ❌ `ApiKeyAuthFailed`. 호출하는 서버의 IP를 ODsay에 등록해야 합니다. |
