@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { api, ApiError } from "@/services/api";
-import { CATEGORY_ICON, km, md, minutes, MODE_LABEL, PROVIDER_LABEL } from "@/services/format";
+import { CATEGORY_ICON, CITY_COLOR, km, md, minutes, MODE_LABEL, PROVIDER_LABEL } from "@/services/format";
 import { useItinerary, usePlaces, useTripId, useTripMutation } from "@/services/queries";
 import type { ItineraryDay, Leg, RouteOption, TimelineEntry, TransitResult } from "@/services/types";
-import { EmptyState, ErrorState, Header, InlineError, ListSkeleton, Notice, Segmented, Sheet, SourceBadge } from "@/components/ui";
+import { EmptyState, ErrorState, Header, InlineError, ListSkeleton, Notice, Sheet, SourceBadge } from "@/components/ui";
 import TransitResults from "@/features/transit/TransitResults";
 import Icon, { type IconName } from "@/components/Icon";
 import { toast } from "@/components/Toast";
@@ -15,8 +15,8 @@ const CONN_STYLE: Record<string, string> = {
 };
 
 const MODE_STYLE: Record<string, { icon: IconName; color: string }> = {
-  WALK: { icon: "walk", color: "#3182F6" }, TRANSIT: { icon: "bus", color: "#E8833A" }, BUS: { icon: "bus", color: "#E8833A" },
-  SUBWAY: { icon: "route", color: "#7B5CC4" }, TRAIN: { icon: "train", color: "#333D4B" }, UNKNOWN: { icon: "route", color: "#B0B8C1" },
+  WALK: { icon: "walk", color: "#4F46E5" }, TRANSIT: { icon: "bus", color: "#E8833A" }, BUS: { icon: "bus", color: "#E8833A" },
+  SUBWAY: { icon: "route", color: "#7B5CC4" }, TRAIN: { icon: "train", color: "#333D4B" }, UNKNOWN: { icon: "route", color: "#B2B3BF" },
 };
 
 /** Connector between two timeline nodes: mode, duration, source, and an action to fill unknown legs. */
@@ -24,7 +24,7 @@ function LegRow({ leg, onTransit }: { leg: Leg; onTransit?: () => void }) {
   const known = leg.duration_minutes != null;
   const st = MODE_STYLE[leg.mode] ?? MODE_STYLE.UNKNOWN;
   const line = !known
-    ? "repeating-linear-gradient(#D1D6DB 0 4px, transparent 4px 8px)"
+    ? "repeating-linear-gradient(#D6D2CB 0 4px, transparent 4px 8px)"
     : leg.mode === "WALK" ? `repeating-linear-gradient(${st.color} 0 3px, transparent 3px 7px)` : `linear-gradient(${st.color}, ${st.color})`;
   return (
     <div className="flex items-stretch gap-3 min-h-12">
@@ -78,7 +78,7 @@ function Entry({ e, prev, idx, count, onMove, onRemove, onTransit }: {
             visited ? "bg-ok border-ok text-white" : rail ? "bg-navy border-navy text-white" : "bg-paper border-coral"}`}>
           {visited ? <Icon name="check" size={14} stroke={3} /> : rail ? <Icon name="train" size={12} /> : null}
         </button>
-        <div className={`flex-1 min-w-0 card p-4 transition-opacity ${visited ? "opacity-60" : ""} ${rail ? "!bg-[#F9FAFB] ring-1 ring-line" : ""}`}>
+        <div className={`flex-1 min-w-0 card p-4 transition-opacity ${visited ? "opacity-60" : ""} ${rail ? "!bg-[#FBFAF8] ring-1 ring-line" : ""}`}>
           <div className="flex items-start gap-2">
             <p className={`font-bold flex-1 min-w-0 ${visited ? "line-through" : ""}`}>{rail ? e.name : `${CATEGORY_ICON[e.category ?? ""] ?? "📍"} ${e.name}`}</p>
             <button className="tap -m-2 flex items-center justify-center text-muted" aria-label="더보기" aria-expanded={menu} onClick={() => setMenu(!menu)}><Icon name="menu" size={18} /></button>
@@ -169,14 +169,18 @@ function DayView({ day }: { day: ItineraryDay }) {
 
   return (
     <div className="space-y-3">
-      <div className="card p-4 grid grid-cols-2 gap-2">
-        <label className="text-xs text-muted">출발 시각
+      <div className="card p-4 grid grid-cols-2 gap-2.5">
+        <label className="text-xs font-semibold text-muted">출발 시각
           <input type="time" className="field !min-h-10" defaultValue={day.start_time} onBlur={(e) => e.target.value !== day.start_time && dayPatch.mutate({ start_time: e.target.value })} /></label>
-        <label className="text-xs text-muted">출발 숙소
+        <label className="text-xs font-semibold text-muted">출발 숙소
           <select className="field !min-h-10" value={day.lodging?.id ?? ""} onChange={(e) => dayPatch.mutate(e.target.value ? { lodging_place_id: e.target.value } : { clear_lodging: true })}>
             <option value="">없음</option>{lodgings.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}
           </select></label>
-        <p className="col-span-2 text-xs text-navy-soft">도보 합계 {km(day.walk_distance_m)} · 종료 예상 {day.end ?? "미확인"}{day.unknown_legs ? ` · 이동시간 미확인 ${day.unknown_legs}구간` : ""}</p>
+        <div className="col-span-2 flex flex-wrap gap-1.5 pt-1">
+          <span className="chip bg-coral-soft text-coral-ink"><Icon name="walk" size={13} />도보 {km(day.walk_distance_m)}</span>
+          <span className="chip bg-sand text-navy-soft"><Icon name="clock" size={13} />종료 {day.end ?? "미확인"}</span>
+          {day.unknown_legs > 0 && <span className="chip bg-[#FFF4E5] text-warn">이동시간 미확인 {day.unknown_legs}구간</span>}
+        </div>
       </div>
       <InlineError error={dayPatch.error} />
       {day.warnings.map((w) => <Notice key={w} tone="warn">{w}</Notice>)}
@@ -264,15 +268,30 @@ export default function ItineraryPage() {
 
   return (
     <div className="page">
-      <Header title="일정" sub={day ? `${md(day.travel_date)} · ${day.primary_city_label}` : ""} />
-      <Segmented value={String(dayNo)} onChange={(v) => setDayNo(Number(v))}
-        options={data.days.map((d) => ({ value: String(d.day_number), label: `DAY ${d.day_number} ${d.primary_city_label}` }))} />
+      <Header eyebrow="우리의 동선" title="일정" sub={day ? `${md(day.travel_date)} · ${day.primary_city_label}` : ""} />
+      <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(${Math.min(data.days.length, 5)}, minmax(0, 1fr))` }} role="tablist" aria-label="날짜">
+        {data.days.map((d) => {
+          const on = d.day_number === dayNo;
+          const n = d.entries.filter((e) => e.kind === "PLACE").length;
+          return (
+            <button key={d.id} role="tab" aria-selected={on} onClick={() => setDayNo(d.day_number)}
+              className={`relative rounded-[18px] px-2 pt-2.5 pb-2.5 text-center transition-all active:scale-95 ${on ? "bg-navy text-white shadow-[0_10px_22px_-10px_rgba(21,24,43,.6)]" : "bg-paper text-navy shadow-[var(--shadow-card)]"}`}>
+              <span className={`block text-[11px] font-bold tracking-[.06em] ${on ? "text-white/60" : "text-muted"}`}>DAY {d.day_number}</span>
+              <span className="flex items-center justify-center gap-1.5 mt-0.5">
+                <span className="w-2 h-2 rounded-full shrink-0" style={{ background: CITY_COLOR[d.primary_city] }} />
+                <span className="text-[16px] font-[800] tracking-[-0.03em] truncate">{d.primary_city_label}</span>
+              </span>
+              <span className={`block text-[11px] mt-0.5 num ${on ? "text-white/60" : "text-muted"}`}>{n ? `${n}곳` : "비어 있음"}</span>
+            </button>
+          );
+        })}
+      </div>
       <div className="mt-4">{day && <DayView key={day.id} day={day} />}</div>
 
       <section className="mt-8">
         <div className="flex items-center justify-between mb-2">
-          <h2 className="text-[18px] font-bold tracking-[-0.02em]">미배정 장소 {data.unassigned.length}</h2>
-          {data.unassigned.length > 0 && <button className="text-sm text-coral font-semibold min-h-11" onClick={() => suggest.mutate()}>날짜 추천 받기</button>}
+          <h2 className="sec-title">미배정 장소 <span className="text-muted num">{data.unassigned.length}</span></h2>
+          {data.unassigned.length > 0 && <button className="text-sm text-coral font-semibold min-h-11 flex items-center gap-1" onClick={() => suggest.mutate()}><Icon name="sparkle" size={16} />날짜 추천 받기</button>}
         </div>
         {sugg && (
           <div className="card p-4 mb-3 space-y-2">
@@ -286,11 +305,13 @@ export default function ItineraryPage() {
             ))}
           </div>
         )}
-        <ul className="space-y-2">
-          {data.unassigned.map((p) => (
-            <li key={p.id} className="card p-4 flex items-center gap-2">
-              <span className="flex-1 min-w-0"><b className="truncate block">{CATEGORY_ICON[p.category]} {p.name}</b><span className="text-xs text-muted">{p.city_label} · 점수 {p.priority_score}{p.both_want ? " · 둘 다" : ""}</span></span>
-              {day && <button className="btn btn-ghost !min-h-10 text-sm shrink-0" onClick={() => addTo.mutate({ dayId: day.id, placeId: p.id })}>DAY {day.day_number}에 넣기</button>}
+        {day && data.unassigned.length > 0 && <p className="text-[13px] text-muted -mt-1 mb-2.5 px-0.5">{day.primary_city_label} 장소를 먼저 보여줘요</p>}
+        <ul className="card divide-y divide-line overflow-hidden">
+          {[...data.unassigned].sort((a, b) => Number(b.city === day?.primary_city) - Number(a.city === day?.primary_city)).map((p) => (
+            <li key={p.id} className="pl-4 pr-3 py-3 flex items-center gap-3">
+              <span className="w-10 h-10 rounded-[13px] flex items-center justify-center text-lg shrink-0" style={{ background: `${CITY_COLOR[p.city]}1f` }}>{CATEGORY_ICON[p.category]}</span>
+              <span className="flex-1 min-w-0"><b className="truncate block text-[15px] font-semibold">{p.name}</b><span className="text-xs text-muted">{p.city_label} · {p.priority_score}점{p.both_want ? " · 💕 둘 다" : ""}</span></span>
+              {day && <button className="btn btn-ghost !min-h-10 !px-3 text-[13px] shrink-0" onClick={() => addTo.mutate({ dayId: day.id, placeId: p.id })}><Icon name="plus" size={15} stroke={2.6} />DAY {day.day_number}</button>}
             </li>
           ))}
         </ul>

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { api, ApiError } from "@/services/api";
-import { CATEGORY_LABEL, km, minutes, PREF_LABEL, PREF_STYLE, ago } from "@/services/format";
+import { CATEGORY_LABEL, CITY_COLOR, km, minutes, PREF_LABEL, PREF_STYLE, ago } from "@/services/format";
 import { useItinerary, usePlaces, useTrip, useTripId, useTripMutation } from "@/services/queries";
 import type { Place, Pref, TransitResult } from "@/services/types";
 import { Avatar, InlineError, Notice, SourceBadge } from "@/components/ui";
@@ -211,7 +211,7 @@ export default function PlaceDetail({ place, onRoute, onStops, onDeleted }: {
 
 /** Rich sheet title: category tile tinted by city + name + meta. */
 export function PlaceTitle({ place }: { place: Place }) {
-  const tint = ({ busan: "#3182F6", gyeongju: "#F08A00", pohang: "#00B8A9", other: "#8B95A1" } as const)[place.city];
+  const tint = CITY_COLOR[place.city];
   return (
     <span className="flex items-center gap-3 min-w-0">
       <span className="w-11 h-11 rounded-2xl flex items-center justify-center text-[22px] shrink-0" style={{ background: tint + "22" }}>

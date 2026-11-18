@@ -114,13 +114,13 @@ export default function ExpensesPage() {
   const cats = Object.entries(d?.by_category ?? {}).sort((a, b) => b[1] - a[1]);
   return (
     <div className="page space-y-4">
-      <Header title="여행 가계부" sub="같이 쓴 돈을 기록하고 마지막에 깔끔하게 정산해요"
+      <Header eyebrow="함께 쓴 돈" title="여행 가계부" sub="같이 쓴 돈을 기록하고 마지막에 깔끔하게 정산해요"
         right={<button className="btn btn-primary" onClick={() => setAdding(true)}><Icon name="plus" size={18} />기록</button>} />
       {q.isLoading && <ListSkeleton rows={3} />}
       {q.error && <ErrorState error={q.error} retry={() => q.refetch()} />}
       {d && (
         <>
-          <section className="rounded-[24px] p-6 text-white" style={{ background: "linear-gradient(140deg,#191F28,#333D4B)" }}>
+          <section className="rounded-[24px] p-6 text-white" style={{ background: "linear-gradient(140deg,#15182B,#333D4B)" }}>
             <p className="text-sm text-white/70">총 지출</p>
             <p className="text-[36px] font-bold tracking-tight leading-tight">{won(d.total)}</p>
             {d.total > 0 && (

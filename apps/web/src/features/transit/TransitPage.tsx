@@ -99,7 +99,7 @@ export default function TransitPage() {
   const tab = (params.get("tab") as Tab) || "rail";
   return (
     <div className="page">
-      <Header title="교통" sub="열차 시간표 · 주변 정류장 · 대중교통 경로" />
+      <Header eyebrow="기차 · 버스 · 지하철" title="교통" sub="열차 시간표 · 주변 정류장 · 대중교통 경로" />
       <Segmented value={tab} onChange={(t) => setParams({ tab: t }, { replace: true })} options={[
         { value: "rail", label: "열차 시간표" }, { value: "mine", label: "내 열차" }, { value: "stops", label: "주변 정류장" },
         { value: "route", label: "경로 검색" }, { value: "pass", label: "내일로" }]} />

@@ -49,7 +49,7 @@ export default function AddPlacePage() {
 
   return (
     <div className="page">
-      <Header title="장소 추가" sub="네이버 지도·카카오맵 공유 링크를 붙여 넣거나 직접 입력해요" />
+      <Header eyebrow="새 장소" title="장소 추가" sub="네이버 지도·카카오맵 공유 링크를 붙여 넣거나 직접 입력해요" />
       <section className="card p-5">
         <label className="label" htmlFor="link">공유 링크 / 공유 문구</label>
         <textarea id="link" className="field min-h-20" value={text} onChange={(e) => setText(e.target.value)}

@@ -80,12 +80,16 @@ export function RailSearch() {
 
   return (
     <div className="space-y-4">
-      <div className="flex gap-2 overflow-x-auto no-scrollbar -mx-1 px-1">
+      <div className="flex gap-2.5 overflow-x-auto no-scrollbar -mx-5 px-5 -my-3 py-3">
         {QUICK.map(([label, a, b, dayIdx]) => (
-          <button key={label} className="card !rounded-[14px] shrink-0 px-4 py-3 text-left"
+          <button key={label} aria-label={`DAY ${dayIdx + 1} ${label}`} className={`ticket !rounded-[18px] shrink-0 w-[168px] px-4 py-3 text-left active:scale-[.97] transition-transform ${dep?.station_id === STATIONS[a].station_id && arr?.station_id === STATIONS[b].station_id ? "ring-2 ring-sunset" : ""}`}
             onClick={() => { setDep(STATIONS[a]); setArr(STATIONS[b]); const d = trip?.days[dayIdx]?.travel_date; if (d) setDate(d); tt.reset(); }}>
-            <span className="text-[11px] font-bold text-coral block">DAY {dayIdx + 1}</span>
-            <span className="font-bold whitespace-nowrap">🚆 {label}</span>
+            <span className="text-[11px] font-bold tracking-[.08em] text-white/55 block">DAY {dayIdx + 1}</span>
+            <span className="flex items-center gap-2 mt-1">
+              <span className="font-[800] text-[17px] tracking-[-0.03em]">{STATIONS[a].name}</span>
+              <span className="flex-1 border-t-[1.5px] border-dashed border-white/35 relative"><span className="absolute -top-[9px] left-1/2 -translate-x-1/2 text-[12px]">🚆</span></span>
+              <span className="font-[800] text-[17px] tracking-[-0.03em]">{STATIONS[b].name}</span>
+            </span>
           </button>
         ))}
       </div>

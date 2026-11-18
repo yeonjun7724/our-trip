@@ -1,7 +1,7 @@
 import type { City, DataStatus, Pref } from "./types";
 
 export const CITY_LABEL: Record<City, string> = { busan: "부산", gyeongju: "경주", pohang: "포항", other: "기타" };
-export const CITY_COLOR: Record<City, string> = { busan: "#3182F6", gyeongju: "#F08A00", pohang: "#00B8A9", other: "#8B95A1" };
+export const CITY_COLOR: Record<City, string> = { busan: "#2F7CF6", gyeongju: "#D9822B", pohang: "#0FA39A", other: "#8B95A1" };
 
 export const PREF_LABEL: Record<Pref, string> = { MUST: "꼭 가고 싶어", GOOD: "가면 좋아", MAYBE: "고민 중", SKIP: "이번에는 제외" };
 export const PREF_SHORT: Record<Pref, string> = { MUST: "꼭!", GOOD: "좋아", MAYBE: "고민", SKIP: "제외" };

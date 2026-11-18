@@ -30,13 +30,13 @@ export function IdentityGate() {
         </div>
       </div>
       <div className="absolute inset-x-0 bottom-0 p-3" style={{ paddingBottom: "calc(var(--sab) + 14px)" }}>
-        <div className="glass rounded-[28px] shadow-[0_-4px_40px_rgba(30,42,68,.18)] p-5 max-w-[520px] mx-auto sheet-in">
+        <div className="bg-paper/95 backdrop-blur-xl rounded-[30px] shadow-[0_0_0_1px_rgba(21,24,43,.05),0_-8px_48px_-8px_rgba(21,24,43,.3)] p-6 max-w-[520px] mx-auto sheet-in">
           {info.isLoading && <div className="skeleton h-32" />}
           {info.error && <ErrorState error={info.error} retry={() => info.refetch()} />}
           {info.data && (
             <>
-              <p className="text-[13px] font-bold text-coral tracking-wide">{info.data.trip_title}</p>
-              <h1 className="text-[26px] leading-tight font-bold tracking-[-0.02em] mt-1">
+              <p className="inline-flex items-center gap-1.5 rounded-full bg-navy text-white text-[12px] font-bold px-3 py-1.5"><span>🚆</span>{info.data.trip_title}</p>
+              <h1 className="text-[28px] leading-[1.22] font-[800] tracking-[-0.035em] mt-3">
                 {info.data.members.length ? "다시 왔네요! 누구세요?" : "둘이 함께 만드는\n기차여행 지도".split("\n").map((l, i) => <span key={i} className="block">{l}</span>)}
               </h1>
               {!info.data.members.length && <p className="text-[14px] text-navy-soft mt-1.5">가고 싶은 곳을 지도에 찍고, 같이 투표하고, 걷는 길과 열차까지 한 번에.</p>}
