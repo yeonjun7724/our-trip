@@ -103,10 +103,37 @@ def add_expense(trip_id: str, body: ExpenseIn, member: TripMember = Depends(curr
     split = body.split_member_ids or [payer]
     if payer not in ids or any(m not in ids for m in split):
         raise AppError(422, "INVALID_MEMBER", "참여자를 확인해 주세요.")
+    _check_day(trip, body.day_number)
     e = Expense(trip_id=trip.id, title=body.title.strip(), amount=body.amount, category=body.category, paid_by=payer,
                 split_member_ids=list(dict.fromkeys(split)), day_number=body.day_number, created_by=member.id)
     db.add(e)
     log_activity(db, member, "EXPENSE_ADDED", f"{member.nickname}님이 '{e.title}' {e.amount:,}원을 기록했어요")
+    db.commit()
+    return _expense_out(e, {m.id: m.nickname for m in trip.members})
+
+
+def _check_day(trip, day_number: int | None) -> None:
+    if day_number is not None and day_number not in {d.day_number for d in trip.days}:
+        raise AppError(422, "INVALID_DAY", "여행 날짜를 확인해 주세요.")
+
+
+@router.put("/expenses/{expense_id}")
+def update_expense(expense_id: str, body: ExpenseIn, member: TripMember = Depends(current_member), db: Session = Depends(get_db)):
+    e = db.get(Expense, expense_id)
+    if e is None or e.trip_id != member.trip_id:
+        raise AppError(404, "EXPENSE_NOT_FOUND", "지출을 찾을 수 없어요.")
+    trip = get_trip(db, member, e.trip_id)
+    ids = {m.id for m in trip.members}
+    if body.category not in EXPENSE_CATS:
+        raise AppError(422, "INVALID_CATEGORY", "분류가 올바르지 않아요.")
+    payer = body.paid_by or e.paid_by or member.id
+    split = body.split_member_ids or [payer]
+    if payer not in ids or any(m not in ids for m in split):
+        raise AppError(422, "INVALID_MEMBER", "참여자를 확인해 주세요.")
+    _check_day(trip, body.day_number)
+    e.title, e.amount, e.category, e.paid_by = body.title.strip(), body.amount, body.category, payer
+    e.split_member_ids, e.day_number = list(dict.fromkeys(split)), body.day_number
+    log_activity(db, member, "EXPENSE_UPDATED", f"{member.nickname}님이 '{e.title}' 지출을 수정했어요")
     db.commit()
     return _expense_out(e, {m.id: m.nickname for m in trip.members})
 

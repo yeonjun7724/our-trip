@@ -25,6 +25,7 @@ test("가계부 정산 · 체크리스트 · 장소 대화", async ({ browser })
   await split.click();
   await a.getByRole("button", { name: /30,000원 저장/ }).click();
   await expect(a.getByText(`KTX${stamp}`)).toBeVisible();
+  await a.getByRole("tab", { name: "정산" }).click();
   await expect(a.getByText(new RegExp(`나${stamp}.*가${stamp}`)).first()).toBeVisible();
 
   // B sees the transfer they owe

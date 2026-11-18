@@ -10,7 +10,7 @@ def test_expenses_and_settlement(client, client2):
     join_trip(client, client2)
     me = client.get("/api/me").json()["member"]["id"]
     pal = client2.get("/api/me").json()["member"]["id"]
-    # I paid 30,000 for both; she paid 10,000 for both; she paid 5,000 only for herself
+    # I paid 30,000 for both; he paid 10,000 for both; he paid 5,000 only for himself
     assert client.post(f"/api/trips/{t['id']}/expenses", json={"title": "KTX", "amount": 30000, "category": "TRANSPORT",
                        "split_member_ids": [me, pal]}).status_code == 201
     client2.post(f"/api/trips/{t['id']}/expenses", json={"title": "밀면", "amount": 10000, "category": "FOOD", "split_member_ids": [me, pal]})
@@ -72,3 +72,20 @@ def test_weather_public_and_normalized(client):
     r = client.get("/api/weather").json()
     assert r["cities"]["busan"]["days"][0] == {"date": "2026-12-20", "code": 3, "tmax": 9.1, "tmin": 1.2, "rain": 20}
     assert "Open-Meteo" in r["attribution"]
+
+
+def test_expense_edit_moves_day_and_resettles(client, client2):
+    t = make_trip(client)["trip"]
+    join_trip(client, client2)
+    me = client.get("/api/me").json()["member"]["id"]
+    pal = client2.get("/api/me").json()["member"]["id"]
+    e = client.post(f"/api/trips/{t['id']}/expenses", json={"title": "돼지국밥", "amount": 20000, "category": "FOOD",
+                    "split_member_ids": [me, pal]}).json()
+    assert e["day_number"] is None
+    body = {"title": "돼지국밥", "amount": 24000, "category": "FOOD", "paid_by": pal, "split_member_ids": [me, pal], "day_number": 1}
+    r = client.put(f"/api/expenses/{e['id']}", json=body)
+    assert r.status_code == 200 and r.json()["day_number"] == 1 and r.json()["paid_by"] == pal
+    s = client.get(f"/api/trips/{t['id']}/expenses").json()
+    assert s["total"] == 24000 and {m["id"]: m["balance"] for m in s["members"]}[me] == -12000
+    assert client.put(f"/api/expenses/{e['id']}", json={**body, "day_number": 9}).status_code == 422  # trip has 4 days
+    assert client.put("/api/expenses/nope", json=body).status_code == 404

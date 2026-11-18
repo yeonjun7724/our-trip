@@ -1,4 +1,5 @@
-import { useState } from "react";
+import HelpButton from "@/components/Help";
+import { useEffect, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { api, ApiError } from "@/services/api";
 import { CATEGORY_LABEL, CITY_COLOR, km, minutes, PREF_LABEL, PREF_STYLE, ago } from "@/services/format";
@@ -18,8 +19,10 @@ interface WalkRes {
   feature: { geometry: RouteFeature["geometry"] } | null; graph_version: string | null;
 }
 
-export default function PlaceDetail({ place, onRoute, onStops, onDeleted }: {
+export default function PlaceDetail({ place, onRoute, onStops, onDeleted, autoWalk = false }: {
   place: Place; onRoute?: (f: RouteFeature[]) => void; onStops?: (s: import("@/services/types").Stop[]) => void; onDeleted?: () => void;
+  /** start an OSMnx walking route from the current location as soon as the sheet opens */
+  autoWalk?: boolean;
 }) {
   const tripId = useTripId()!;
   const places = usePlaces(tripId).data ?? [];
@@ -60,6 +63,17 @@ export default function PlaceDetail({ place, onRoute, onStops, onDeleted }: {
     mutationFn: () => api.post<WalkRes>("/api/routes/walking", { origin, destination: dest }),
     onSuccess: (r) => { setWalk(r); if (r.feature) onRoute?.([{ geometry: r.feature.geometry, mode: "WALK" }]); },
   });
+  // "walk now": find me (if needed), then run the OSMnx route once the origin is known
+  const [walkWanted, setWalkWanted] = useState(autoWalk);
+  const startWalk = () => {
+    setWalkWanted(true);
+    document.getElementById("pd-route")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    if (originId === "me" && !myPos) locate();
+  };
+  useEffect(() => { if (autoWalk && dest) startWalk(); }, []); // eslint-disable-line
+  useEffect(() => {
+    if (walkWanted && origin && dest && !walkM.isPending) { setWalkWanted(false); walkM.mutate(); }
+  }, [walkWanted, origin?.lat, origin?.lon]); // eslint-disable-line
 
   const assignedDay = it?.days.find((d) => d.entries.some((e) => e.place_id === place.id));
   const conflict = patch.error instanceof ApiError && patch.error.status === 409;
@@ -76,7 +90,7 @@ export default function PlaceDetail({ place, onRoute, onStops, onDeleted }: {
 
       <div className="grid grid-cols-4 gap-2">
         {[
-          { i: "walk" as const, l: "도보", on: () => document.getElementById("pd-route")?.scrollIntoView({ behavior: "smooth" }), dis: !dest },
+          { i: "walk" as const, l: "도보 길찾기", on: startWalk, dis: !dest },
           { i: "calendar" as const, l: assignedDay ? `DAY ${assignedDay.day_number}` : "일정", on: () => document.getElementById("pd-plan")?.scrollIntoView({ behavior: "smooth" }), dis: false },
           { i: "bus" as const, l: "정류장", on: () => { setShowStops(true); setTimeout(() => document.getElementById("pd-stops")?.scrollIntoView({ behavior: "smooth" }), 50); }, dis: !dest },
           { i: "share" as const, l: "공유", on: async () => {
@@ -141,8 +155,14 @@ export default function PlaceDetail({ place, onRoute, onStops, onDeleted }: {
       </section>
 
       {dest && (
-        <section id="pd-route">
-          <h3 className="text-[17px] font-bold tracking-[-0.02em] mb-3">여기까지 가는 길</h3>
+        <section id="pd-route" className="rounded-[20px] bg-coral-soft p-4 scroll-mt-4">
+          <div className="flex items-start gap-3 mb-3">
+            <span className="w-11 h-11 rounded-full bg-coral text-white flex items-center justify-center shrink-0"><Icon name="walk" size={22} stroke={2.2} /></span>
+            <div className="min-w-0">
+              <h3 className="text-[17px] font-bold tracking-[-0.02em]">걸어서 가는 길</h3>
+              <p className="text-[13px] text-navy-soft leading-snug mt-0.5">OpenStreetMap 실제 보행로를 OSMnx로 계산해서 지도에 길을 그려줘요.</p>
+            </div>
+          </div>
           <div className="flex gap-2">
             <select className="field" value={originId} onChange={(e) => { setOriginId(e.target.value); setWalk(null); setTransit(null); }} aria-label="출발지">
               <option value="me">현재 위치</option>
@@ -151,16 +171,19 @@ export default function PlaceDetail({ place, onRoute, onStops, onDeleted }: {
             {originId === "me" && <button className="btn btn-ghost shrink-0" onClick={locate}>{myPos ? "다시 찾기" : "위치 찾기"}</button>}
           </div>
           {geoErr && <p className="text-sm text-bad mt-1">{geoErr}</p>}
-          <div className="flex gap-2 mt-2">
-            <button className="btn btn-outline flex-1" disabled={!origin || walkM.isPending} onClick={() => walkM.mutate()}>🚶 도보 경로</button>
-            {origin && <TransitSearchButton origin={origin} destination={dest} onResult={setTransit} />}
-          </div>
+          <button className="btn btn-primary w-full mt-2 !min-h-14 text-[17px]" disabled={walkM.isPending || (walkWanted && !origin && !geoErr)}
+            onClick={() => (origin ? walkM.mutate() : startWalk())}>
+            <Icon name="walk" size={20} stroke={2.4} />{walkM.isPending ? "보행로 계산 중…" : walkWanted && !origin && !geoErr ? "현재 위치 찾는 중…" : walk ? "도보 경로 다시 찾기" : "도보 길찾기"}
+          </button>
+          {origin && <div className="flex mt-2"><TransitSearchButton origin={origin} destination={dest} onResult={setTransit} /></div>}
           {walk && (
-            <div className="card p-4 mt-2">
+            <div className="bg-paper rounded-[16px] p-4 mt-2">
               {walk.status === "OK" ? (
                 <>
-                  <p><b>도보 {minutes(walk.duration_minutes)}</b> · {km(walk.distance_m)}</p>
-                  <div className="mt-1"><SourceBadge status="ESTIMATED" provider="OSMNX" /></div>
+                  <p className="text-[13px] text-muted">{origin?.label ?? "출발지"}에서 걸어서</p>
+                  <p className="text-[24px] font-bold tracking-[-0.03em] num">{minutes(walk.duration_minutes)} <span className="text-[16px] font-semibold text-navy-soft">· {km(walk.distance_m)}</span></p>
+                  {onRoute && <p className="text-[13px] text-coral-ink font-semibold mt-0.5">지도에 파란 점선으로 길을 표시했어요</p>}
+                  <div className="mt-2"><SourceBadge status="ESTIMATED" provider="OSMNX" /></div>
                 </>
               ) : <p className="text-sm">{walk.warnings[0] ?? "도보 경로를 계산할 수 없어요."}</p>}
               {walk.status === "OK" && walk.warnings.map((w) => <p key={w} className="text-xs text-warn mt-1">{w}</p>)}
@@ -221,6 +244,7 @@ export function PlaceTitle({ place }: { place: Place }) {
         <span className="truncate text-[19px] leading-tight">{place.name}{place.both_want ? " 💕" : ""}</span>
         <span className="text-[12px] font-semibold text-muted">{place.city_label} · {CATEGORY_LABEL[place.category] ?? place.category}</span>
       </span>
+      <HelpButton page="place" className="ml-auto" />
     </span>
   );
 }

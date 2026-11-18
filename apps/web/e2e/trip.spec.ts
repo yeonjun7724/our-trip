@@ -70,7 +70,7 @@ test("방 만들기 없이 지도에서 바로: 이름 선택 → 지도 탭으�
   await p.getByRole("button", { name: "광안리", exact: true }).first().dispatchEvent("click");
   await expect(p.getByRole("dialog")).toBeVisible();
   await p.getByLabel("출발지").selectOption({ label: "해운대" });
-  await p.getByRole("button", { name: "🚶 도보 경로" }).click();
+  await p.getByRole("button", { name: "도보 길찾기", exact: true }).last().click();
   await expect(p.getByText("OSMnx 계산").first()).toBeVisible();
   await p.getByRole("button", { name: "🚌 대중교통 경로" }).click();
   await expect(p.getByRole("link", { name: /카카오맵 길찾기/ })).toBeVisible();

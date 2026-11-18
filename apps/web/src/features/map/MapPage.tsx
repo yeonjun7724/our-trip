@@ -29,6 +29,7 @@ export default function MapPage() {
   const [routes, setRoutes] = useState<RouteFeature[]>([]);
   const [stops, setStops] = useState<Stop[]>([]);
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [autoWalk, setAutoWalk] = useState(false);
   const [center, setCenter] = useState<{ lat: number; lon: number } | null>(null);
   const [quick, setQuick] = useState<QuickAddInit | null>(null);
   const [focus, setFocus] = useState<{ lat: number; lon: number; zoom?: number; key: string } | null>(null);
@@ -214,8 +215,9 @@ export default function MapPage() {
                 const o = order[p.id];
                 const sel = p.id === ui.selectedPlaceId;
                 return (
-                  <button key={p.id} data-card={p.id} onClick={() => (sel ? setDetailOpen(true) : select(p))}
-                    className={`relative overflow-hidden shrink-0 w-[80vw] max-w-[320px] text-left bg-paper rounded-[20px] p-4 shadow-float transition-all active:scale-[.98] ${sel ? "ring-2 ring-coral" : ""}`}>
+                  <div key={p.id} data-card={p.id} role="button" tabIndex={0} aria-label={p.name} onClick={() => (sel ? (setAutoWalk(false), setDetailOpen(true)) : select(p))}
+                    onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); if (sel) { setAutoWalk(false); setDetailOpen(true); } else select(p); } }}
+                    className={`relative overflow-hidden shrink-0 w-[80vw] max-w-[320px] text-left bg-paper rounded-[20px] p-4 shadow-float transition-all active:scale-[.98] cursor-pointer ${sel ? "ring-2 ring-coral" : ""}`}>
                     <div className="flex gap-3">
                       <span className="w-12 h-12 rounded-[14px] flex items-center justify-center text-xl shrink-0" style={{ background: CITY_COLOR[p.city] + "22" }}>{CATEGORY_ICON[p.category]}</span>
                       <span className="flex-1 min-w-0">
@@ -231,7 +233,13 @@ export default function MapPage() {
                       ))}
                       <span className="ml-auto text-xs font-semibold text-coral flex items-center">{sel ? "자세히" : "보기"}<Icon name="chevronR" size={14} /></span>
                     </div>
-                  </button>
+                    {p.has_location && (
+                      <button type="button" onClick={(e) => { e.stopPropagation(); ui.set({ selectedPlaceId: p.id }); setAutoWalk(true); setDetailOpen(true); }}
+                        className="mt-3 w-full h-11 rounded-[12px] bg-coral-soft text-coral-ink text-[14px] font-bold flex items-center justify-center gap-1.5 active:bg-[#C9E2FF]">
+                        <Icon name="walk" size={18} stroke={2.4} />걸어서 가는 길
+                      </button>
+                    )}
+                  </div>
                 );
               })}
             </div>
@@ -241,7 +249,7 @@ export default function MapPage() {
 
       <Sheet open={detailOpen && !!selected} backdrop={false} onClose={() => { setDetailOpen(false); setRoutes([]); setStops([]); }}
         title={selected && <PlaceTitle place={selected} />}>
-        {selected && <PlaceDetail key={selected.id} place={selected} onRoute={setRoutes} onStops={setStops}
+        {selected && <PlaceDetail key={selected.id + (autoWalk ? ":walk" : "")} place={selected} autoWalk={autoWalk} onRoute={setRoutes} onStops={setStops}
           onDeleted={() => { setDetailOpen(false); ui.set({ selectedPlaceId: null }); }} />}
       </Sheet>
 
