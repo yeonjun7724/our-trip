@@ -60,8 +60,12 @@ def raise_for_error(data: dict, http_status: int) -> None:
 
 
 async def _get(path: str, params: dict) -> dict:
+    s = get_settings()
+    # The ODsay key is registered for the URI platform (our app domain). Verified 2026-11-18:
+    # ODsay authenticates such keys by the Referer header (Origin alone is rejected).
     async with http_client(12) as c:
-        r = await c.get(f"{BASE}/{path}", params={**params, "apiKey": get_settings().odsay_api_key})
+        r = await c.get(f"{BASE}/{path}", params={**params, "apiKey": s.odsay_api_key},
+                        headers={"Referer": s.public_base_url.rstrip("/") + "/"})
     if r.status_code == 429:
         raise QuotaExceeded("HTTP 429", 429)
     try:
