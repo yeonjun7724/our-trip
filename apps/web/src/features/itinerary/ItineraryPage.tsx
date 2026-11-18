@@ -268,7 +268,7 @@ export default function ItineraryPage() {
 
   return (
     <div className="page">
-      <Header eyebrow="우리의 동선" title="일정" sub={day ? `${md(day.travel_date)} · ${day.primary_city_label}` : ""} />
+      <Header eyebrow="우리의 동선" title="일정" help="itinerary" sub={day ? `${md(day.travel_date)} · ${day.primary_city_label}` : ""} />
       <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(${Math.min(data.days.length, 5)}, minmax(0, 1fr))` }} role="tablist" aria-label="날짜">
         {data.days.map((d) => {
           const on = d.day_number === dayNo;

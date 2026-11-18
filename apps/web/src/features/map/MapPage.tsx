@@ -1,3 +1,4 @@
+import HelpButton from "@/components/Help";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -163,6 +164,7 @@ export default function MapPage() {
               </div>
             )}
           </div>
+          <div className="glass shadow-float rounded-[18px] w-[52px] h-[52px] flex items-center justify-center shrink-0"><HelpButton page="map" /></div>
           <Link to="/home" className="glass shadow-float rounded-[18px] w-[52px] h-[52px] flex items-center justify-center shrink-0" aria-label="여행 요약">
             {trip?.members.find((m) => m.is_me) ? <Avatar name={trip.members.find((m) => m.is_me)!.nickname} index={memberIdx[trip.members.find((m) => m.is_me)!.id]} size={30} /> : <Icon name="home" />}
           </Link>

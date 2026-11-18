@@ -1,3 +1,4 @@
+import HelpButton from "@/components/Help";
 import { Link } from "react-router-dom";
 import Icon, { type IconName } from "@/components/Icon";
 import { Avatar, ErrorState, ListSkeleton, Notice } from "@/components/ui";
@@ -67,6 +68,7 @@ export default function HomePage() {
     <div className="page space-y-3">
       <header className="flex items-center gap-2 h-11 -mt-1">
         <span className="flex-1 font-bold text-[19px] tracking-[-0.03em]">Our Trip</span>
+        <HelpButton page="home" />
         <Link to="/settings" className="tap rounded-full text-[#B0B8C1] active:bg-line flex items-center justify-center" aria-label="여행 설정">
           <Icon name="settings" size={24} />
         </Link>

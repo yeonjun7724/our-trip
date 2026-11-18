@@ -34,7 +34,7 @@ export default function WishlistPage() {
 
   return (
     <div className="page">
-      <Header eyebrow="함께 고르는 곳" title="위시리스트" sub={`${q.data?.length ?? 0}곳 · 둘 다 원하는 곳 ${q.data?.filter((p) => p.both_want).length ?? 0}곳`}
+      <Header eyebrow="함께 고르는 곳" title="위시리스트" help="wishlist" sub={`${q.data?.length ?? 0}곳 · 둘 다 원하는 곳 ${q.data?.filter((p) => p.both_want).length ?? 0}곳`}
         right={<Link to="/places/new" className="btn btn-primary !min-h-11 !px-4"><Icon name="plus" size={18} stroke={2.6} />추가</Link>} />
       <Segmented value={tab} onChange={setTab} options={[
         { value: "all", label: "전체" }, { value: "both", label: "둘 다 💕" }, { value: "mine", label: "내가 추가" },

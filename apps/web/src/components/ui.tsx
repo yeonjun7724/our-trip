@@ -1,3 +1,4 @@
+import HelpButton, { type HelpKey } from "./Help";
 import { type ReactNode, useEffect, useRef, useState } from "react";
 import Icon from "./Icon";
 import { createPortal } from "react-dom";
@@ -162,7 +163,7 @@ export function Segmented<T extends string>({ value, options, onChange, size = "
 }
 
 /** Large title that collapses into a sticky, blurred compact bar on scroll (iOS pattern). */
-export function Header({ title, sub, right, eyebrow }: { title: ReactNode; sub?: ReactNode; right?: ReactNode; eyebrow?: ReactNode }) {
+export function Header({ title, sub, right, eyebrow, help }: { title: ReactNode; sub?: ReactNode; right?: ReactNode; eyebrow?: ReactNode; help?: HelpKey }) {
   const [compact, setCompact] = useState(false);
   useEffect(() => {
     // scroll position, not IntersectionObserver: the page entrance animation made the observer misfire at the top
@@ -185,6 +186,7 @@ export function Header({ title, sub, right, eyebrow }: { title: ReactNode; sub?:
           <h1 className="text-[26px] leading-[1.3] font-bold tracking-[-0.03em]">{title}</h1>
           {sub && <p className="text-[15px] text-muted mt-1">{sub}</p>}
         </div>
+        {help && <HelpButton page={help} className="-mb-1.5" />}
         {right}
       </header>
     </>

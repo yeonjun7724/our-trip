@@ -101,7 +101,7 @@ export default function SettingsPage() {
   if (trip.error) return <div className="page"><ErrorState error={trip.error} /></div>;
   return (
     <div className="page space-y-4">
-      <Header eyebrow="Our Trip" title="여행 설정" right={<button className="btn btn-ghost" onClick={() => nav(-1)}>닫기</button>} />
+      <Header eyebrow="Our Trip" title="여행 설정" help="settings" right={<button className="btn btn-ghost" onClick={() => nav(-1)}>닫기</button>} />
       <ShareApp trip={trip.data!} />
       <TripForm key={trip.data!.version} trip={trip.data!} />
       <Providers />

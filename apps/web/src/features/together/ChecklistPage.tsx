@@ -32,7 +32,7 @@ export default function ChecklistPage() {
   const pct = items.length ? Math.round((done / items.length) * 100) : 0;
   return (
     <div className="page space-y-4">
-      <Header eyebrow="여행 준비" title="체크리스트" sub="둘이 같이 보는 준비물 · 할 일" />
+      <Header eyebrow="여행 준비" title="체크리스트" help="checklist" sub="둘이 같이 보는 준비물 · 할 일" />
       <Segmented value={group} onChange={setGroup} options={[{ value: "PACK", label: "🎒 준비물" }, { value: "TODO", label: "✅ 할 일" }]} />
       <section className="card p-5 flex items-center gap-4">
         <div className="relative w-16 h-16 shrink-0">
