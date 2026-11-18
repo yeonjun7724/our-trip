@@ -30,7 +30,7 @@ class TripCreate(BaseModel):
     return_station_id: str | None = None
     return_station_name: str | None = None
     rail_pass_type: str = "UNDECIDED"
-    day_cities: list[str] = ["busan", "gyeongju", "pohang", "pohang"]
+    day_cities: list[str] = ["busan", "busan", "gyeongju", "pohang"]
     seed_candidates: bool = True
 
     @field_validator("rail_pass_type")
@@ -356,7 +356,7 @@ def _default_trip(db: Session) -> Trip:
                 rail_pass_type="UNDECIDED")
     db.add(trip)
     db.flush()
-    for i, c in enumerate(["busan", "gyeongju", "pohang", "pohang"], start=1):
+    for i, c in enumerate(["busan", "busan", "gyeongju", "pohang"], start=1):
         db.add(TripDay(trip_id=trip.id, day_number=i, primary_city=c))
     db.flush()
     _seed_places(db, trip, None)

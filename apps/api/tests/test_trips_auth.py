@@ -4,7 +4,7 @@ from conftest import join_trip, make_trip
 def test_create_trip_without_dates_creates_four_days(client):
     data = make_trip(client)
     days = data["trip"]["days"]
-    assert [d["primary_city"] for d in days] == ["busan", "gyeongju", "pohang", "pohang"]
+    assert [d["primary_city"] for d in days] == ["busan", "busan", "gyeongju", "pohang"]
     assert all(d["travel_date"] is None for d in days)
     assert data["recovery_key"]
     assert "ourtrip_session" in client.cookies

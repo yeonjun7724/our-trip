@@ -166,7 +166,7 @@ def test_day_assignment_suggestions_need_approval(client, client2):
     client2.post(f"/api/places/{b['id']}/votes", json={"preference": "SKIP"})
     s = client.post(f"/api/trips/{t['id']}/optimize", json={}).json()
     assert s["kind"] == "DAY_ASSIGNMENT"
-    assert [x["name"] for x in s["suggestions"]] == ["첨성대"] and s["suggestions"][0]["day_number"] == 2
+    assert [x["name"] for x in s["suggestions"]] == ["첨성대"] and s["suggestions"][0]["day_number"] == 3
     it = client.get(f"/api/trips/{t['id']}/itinerary").json()
     assert all(not d["entries"] for d in it["days"])
 

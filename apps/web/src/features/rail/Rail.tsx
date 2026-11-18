@@ -47,7 +47,7 @@ const STATIONS: Record<string, Station> = {
   pohang: { station_id: "NAT8B0351", name: "포항", city_name: "경상북도" },
 };
 const QUICK: [string, string, string, number][] = [
-  ["부산 → 경주", "busan", "gyeongju", 1], ["경주 → 포항", "gyeongju", "pohang", 2], ["포항 → 부산", "pohang", "busan", 3],
+  ["부산 → 경주", "busan", "gyeongju", 2], ["경주 → 포항", "gyeongju", "pohang", 3], ["포항 → 부산", "pohang", "busan", 3],
 ];
 
 interface TimetableRes { status: string; trains: Train[]; message?: string | null; notice?: string; fetched_at: string; direct_available: boolean }
@@ -63,7 +63,7 @@ export function RailSearch() {
   const [hours, setHours] = useState<[number, number]>([5, 23]);
   const [type, setType] = useState("");
   const [minTransfer, setMinTransfer] = useState(15);
-  useEffect(() => { if (!date && trip?.days[1]?.travel_date) setDate(trip.days[1].travel_date); }, [trip, date]);
+  useEffect(() => { if (!date && trip?.days[2]?.travel_date) setDate(trip.days[2].travel_date); }, [trip, date]);
 
   const tt = useMutation({
     mutationFn: () => api.get<TimetableRes>(`/api/rail/timetable?${qs({ dep: dep!.station_id, arr: arr!.station_id, date, from_hour: hours[0], to_hour: hours[1], train_type: type })}`),
