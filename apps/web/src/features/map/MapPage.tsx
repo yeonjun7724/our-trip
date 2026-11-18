@@ -114,7 +114,7 @@ export default function MapPage() {
   const cardsVisible = !detailOpen && !quick && !searchOpen;
 
   return (
-    <div className="fixed inset-0 map-under-nav">
+    <div className={`fixed inset-0 map-under-nav ${cardsVisible ? "" : "sheet-open"}`}>
       <MapView markers={markers} routes={routes.length ? routes : dayRoutes} fit={fit} focus={focus} bottomPad={detailOpen ? 420 : 310}
         onSelect={(id, kind) => {
           if (kind === "place") { const p = places.data?.find((x) => x.id === id); if (p) select(p, detailOpen || p.id === ui.selectedPlaceId); }

@@ -178,3 +178,10 @@ select.field { appearance: none; padding-right: 2.5rem;
 
 /* Map runs full-bleed under the floating nav; keep its required attribution above the nav. */
 .map-under-nav .maplibregl-ctrl-bottom-right, .map-under-nav .maplibregl-ctrl-bottom-left { bottom: calc(var(--nav-h) + var(--nav-gap) + var(--sab) + 2px); }
+/* The top-right corner belongs to the search bar on the map page: move the locate control (zoom is hidden on phones)
+   to the bottom-right, just above the place cards, as a large round thumb-reachable button. */
+.map-under-nav .maplibregl-ctrl-top-right { top: auto; bottom: calc(var(--nav-h) + var(--nav-gap) + var(--sab) + 148px); }
+.map-under-nav .maplibregl-ctrl-top-right .maplibregl-ctrl { margin: 0 12px 0 0; }
+.map-under-nav .maplibregl-ctrl-top-right .maplibregl-ctrl-group:last-child { border-radius: 9999px !important; }
+.map-under-nav .maplibregl-ctrl-top-right .maplibregl-ctrl-group:last-child button { width: 48px !important; height: 48px !important; }
+.map-under-nav.sheet-open .maplibregl-ctrl-top-right { display: none; }
