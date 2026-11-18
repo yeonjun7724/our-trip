@@ -11,3 +11,4 @@ apps/web/e2e-results/
 apps/web/test-results/
 .pytest_cache/
 *.tmp.mjs
+*.tsbuildinfo
