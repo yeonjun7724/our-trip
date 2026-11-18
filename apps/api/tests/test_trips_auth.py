@@ -26,12 +26,13 @@ def test_dates_set_day_dates_and_extend(client):
 def test_seed_candidates_never_invent_coordinates(client):
     data = make_trip(client, seed_candidates=True)
     places = client.get(f"/api/trips/{data['trip']['id']}/places").json()
-    assert data["seeded_places"] == len(places) == 13
+    assert data["seeded_places"] == len(places) == 42
     for p in places:
         if p["latitude"] is None:
             assert p["coordinate_source"] == "NONE"
         else:
-            assert p["coordinate_source"] == "OSM_NOMINATIM" and p["osm_ref"]
+            # every seeded coordinate is traceable: an OSM object or a TourAPI (한국관광공사) content id
+            assert (p["coordinate_source"] == "OSM_NOMINATIM" and p["osm_ref"]) or                 (p["coordinate_source"] == "TOURAPI" and p["provider_place_id"])
 
 
 def test_invite_join_separate_sessions_and_access_control(client, client2, app):

@@ -23,7 +23,7 @@ export const STATUS_LABEL: Record<DataStatus, string> = {
 
 export const PROVIDER_LABEL: Record<string, string> = {
   OSMNX: "OSMnx 계산", ODSAY: "ODsay", TAGO: "TAGO", OSM: "OpenStreetMap", USER: "직접 입력",
-  TAGO_TIMETABLE: "TAGO 시간표", USER_ENTERED: "직접 입력", NOMINATIM: "OSM 검색",
+  TAGO_TIMETABLE: "TAGO 시간표", USER_ENTERED: "직접 입력", NOMINATIM: "OSM 검색", TOURAPI: "한국관광공사",
 };
 
 export const MODE_LABEL: Record<string, string> = {

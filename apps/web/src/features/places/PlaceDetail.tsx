@@ -129,7 +129,7 @@ export default function PlaceDetail({ place, onRoute, onStops, onDeleted }: {
         {place.has_location ? (
           <div className="flex items-center gap-2 flex-wrap">
             <SourceBadge status={place.coordinate_source === "USER_PICKED" ? "USER_ENTERED" : "VERIFIED_STATIC"}
-              provider={place.coordinate_source === "USER_PICKED" ? "USER" : "NOMINATIM"} />
+              provider={place.coordinate_source === "USER_PICKED" ? "USER" : place.coordinate_source === "TOURAPI" ? "TOURAPI" : "NOMINATIM"} />
             <button className="text-sm text-coral font-semibold min-h-11 px-2" onClick={() => setPicker(true)}>위치 수정</button>
           </div>
         ) : (

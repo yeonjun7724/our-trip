@@ -14,7 +14,7 @@ def test_open_map_pick_name_and_shared_trip(app, client, client2, monkeypatch):
     assert r2.json()["trip_id"] == trip_id
     assert len(client.get(f"/api/trips/{trip_id}").json()["members"]) == base_members + 2
     # seeded once, shared
-    assert len(client2.get(f"/api/trips/{trip_id}/places").json()) >= 13
+    assert len(client2.get(f"/api/trips/{trip_id}/places").json()) >= 42
     # third device picks an existing name instead of duplicating
     with TestClient(app) as c3:
         mid = r2.json()["member"]["id"]

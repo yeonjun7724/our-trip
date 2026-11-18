@@ -107,7 +107,7 @@ export default function SettingsPage() {
       <Providers />
       <p className="text-xs text-muted">여행방 ID: <span className="num font-semibold select-all">{trip.data!.id}</span></p>
       <button className="btn btn-outline w-full" onClick={() => logout.mutate()}>이 기기에서 나가기</button>
-      <p className="text-[11px] text-muted">지도 © OpenStreetMap contributors</p>
+      <p className="text-[11px] text-muted">지도 © OpenStreetMap contributors · 관광정보 © 한국관광공사 TourAPI</p>
     </div>
   );
 }

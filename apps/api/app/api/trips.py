@@ -89,8 +89,8 @@ def _seed_places(db: Session, trip: Trip, owner: TripMember | None) -> int:
         db.add(Place(trip_id=trip.id, name=c["name"], city=c["city"], category=c.get("category", "ATTRACTION"),
                      latitude=c.get("latitude"), longitude=c.get("longitude"),
                      coordinate_source=c.get("coordinate_source") or "NONE" if has else "NONE",
-                     osm_ref=c.get("osm_ref"), provider="SEED", created_by=None,
-                     memo="초기 추천 후보 (확정 일정 아님)" + ("" if has else " · 위치 미확정 — 지도에서 직접 지정해 주세요")))
+                     osm_ref=c.get("osm_ref"), provider="SEED", provider_place_id=c.get("tourapi_content_id"), created_by=None,
+                     memo=c.get("memo") or ("초기 추천 후보 (확정 일정 아님)" + ("" if has else " · 위치 미확정 — 지도에서 직접 지정해 주세요"))))
         n += 1
     return n
 
