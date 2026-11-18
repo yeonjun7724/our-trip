@@ -120,15 +120,15 @@ export default function ExpensesPage() {
       {q.error && <ErrorState error={q.error} retry={() => q.refetch()} />}
       {d && (
         <>
-          <section className="rounded-[24px] p-6 text-white" style={{ background: "linear-gradient(140deg,#15182B,#333D4B)" }}>
-            <p className="text-sm text-white/70">총 지출</p>
-            <p className="text-[36px] font-bold tracking-tight leading-tight">{won(d.total)}</p>
+          <section className="card p-6">
+            <p className="text-[15px] text-navy-soft font-medium">총 지출</p>
+            <p className="text-[32px] font-bold tracking-[-0.03em] leading-tight mt-0.5 num">{won(d.total)}</p>
             {d.total > 0 && (
               <>
-                <div className="flex h-2.5 rounded-full overflow-hidden mt-3 bg-white/15">
+                <div className="flex h-2.5 rounded-full overflow-hidden mt-4 bg-sand gap-[2px]">
                   {cats.map(([k, v]) => <span key={k} style={{ width: `${(v / d.total) * 100}%`, background: EXPENSE_CATS[k]?.color }} />)}
                 </div>
-                <div className="flex flex-wrap gap-x-3 gap-y-1 mt-2 text-xs text-white/80">
+                <div className="flex flex-wrap gap-x-3 gap-y-1 mt-2.5 text-[13px] text-navy-soft">
                   {cats.map(([k, v]) => <span key={k}>{EXPENSE_CATS[k]?.icon} {EXPENSE_CATS[k]?.label} {Math.round((v / d.total) * 100)}%</span>)}
                 </div>
               </>

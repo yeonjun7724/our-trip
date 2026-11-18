@@ -213,8 +213,7 @@ export default function MapPage() {
                 const sel = p.id === ui.selectedPlaceId;
                 return (
                   <button key={p.id} data-card={p.id} onClick={() => (sel ? setDetailOpen(true) : select(p))}
-                    className={`relative overflow-hidden shrink-0 w-[80vw] max-w-[320px] text-left bg-paper rounded-[22px] p-4 pl-5 shadow-float transition-all active:scale-[.98] ${sel ? "ring-2 ring-coral" : ""}`}>
-                    <span className="absolute left-0 top-0 bottom-0 w-[5px]" style={{ background: CITY_COLOR[p.city] }} aria-hidden />
+                    className={`relative overflow-hidden shrink-0 w-[80vw] max-w-[320px] text-left bg-paper rounded-[20px] p-4 shadow-float transition-all active:scale-[.98] ${sel ? "ring-2 ring-coral" : ""}`}>
                     <div className="flex gap-3">
                       <span className="w-12 h-12 rounded-[14px] flex items-center justify-center text-xl shrink-0" style={{ background: CITY_COLOR[p.city] + "22" }}>{CATEGORY_ICON[p.category]}</span>
                       <span className="flex-1 min-w-0">

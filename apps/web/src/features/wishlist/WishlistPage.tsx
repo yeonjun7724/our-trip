@@ -85,8 +85,8 @@ function PlaceCard({ p, onClick, memberIdx }: { p: Place; onClick: () => void; m
     () => toast(p.my_vote === "MUST" ? "선택을 취소했어요" : `'${p.name}' 꼭 가고 싶어 😍`));
   return (
     <div className={`card overflow-hidden flex ${p.excluded ? "opacity-60" : ""}`}>
-      <button onClick={onClick} className="flex-1 min-w-0 text-left pl-4 pr-2 py-3.5 flex items-center gap-3.5 active:bg-[#FBFAF8] transition-colors">
-        <span className="w-[52px] h-[52px] rounded-[16px] flex items-center justify-center text-[22px] shrink-0" style={{ background: `linear-gradient(145deg, ${CITY_COLOR[p.city]}26, ${CITY_COLOR[p.city]}0d)` }}>{CATEGORY_ICON[p.category] ?? "📍"}</span>
+      <button onClick={onClick} className="flex-1 min-w-0 text-left pl-4 pr-2 py-3.5 flex items-center gap-3.5 active:bg-[#F9FAFB] transition-colors">
+        <span className="w-12 h-12 rounded-full flex items-center justify-center text-[22px] shrink-0" style={{ background: `${CITY_COLOR[p.city]}1a` }}>{CATEGORY_ICON[p.category] ?? "📍"}</span>
         <span className="flex-1 min-w-0">
           <span className="flex items-center gap-1.5">
             <span className="font-semibold text-[16px] truncate">{p.name}</span>

@@ -25,18 +25,18 @@ export function IdentityGate() {
       <div className="absolute inset-0 bg-gradient-to-b from-ivory/10 via-ivory/30 to-ivory/90 pointer-events-none" />
       <div className="absolute inset-x-0 top-0 px-5 pointer-events-none" style={{ paddingTop: "calc(var(--sat) + 28px)" }}>
         <div className="max-w-[520px] mx-auto flex items-center gap-2.5">
-          <img src="/icons/icon.svg" alt="" className="w-10 h-10 rounded-xl shadow-float" />
+          <img src="/icons/icon.svg" alt="" className="w-10 h-10 rounded-[12px]" />
           <span className="font-bold text-[22px] tracking-tight">Our Trip</span>
         </div>
       </div>
       <div className="absolute inset-x-0 bottom-0 p-3" style={{ paddingBottom: "calc(var(--sab) + 14px)" }}>
-        <div className="bg-paper/95 backdrop-blur-xl rounded-[30px] shadow-[0_0_0_1px_rgba(21,24,43,.05),0_-8px_48px_-8px_rgba(21,24,43,.3)] p-6 max-w-[520px] mx-auto sheet-in">
+        <div className="bg-paper rounded-[28px] shadow-[0_-4px_32px_rgba(0,0,0,.12)] p-6 max-w-[520px] mx-auto sheet-in">
           {info.isLoading && <div className="skeleton h-32" />}
           {info.error && <ErrorState error={info.error} retry={() => info.refetch()} />}
           {info.data && (
             <>
-              <p className="inline-flex items-center gap-1.5 rounded-full bg-navy text-white text-[12px] font-bold px-3 py-1.5"><span>🚆</span>{info.data.trip_title}</p>
-              <h1 className="text-[28px] leading-[1.22] font-[800] tracking-[-0.035em] mt-3">
+              <p className="text-[15px] font-semibold text-coral">{info.data.trip_title}</p>
+              <h1 className="text-[26px] leading-[1.35] font-bold tracking-[-0.03em] mt-1.5">
                 {info.data.members.length ? "다시 왔네요! 누구세요?" : "둘이 함께 만드는\n기차여행 지도".split("\n").map((l, i) => <span key={i} className="block">{l}</span>)}
               </h1>
               {!info.data.members.length && <p className="text-[14px] text-navy-soft mt-1.5">가고 싶은 곳을 지도에 찍고, 같이 투표하고, 걷는 길과 열차까지 한 번에.</p>}

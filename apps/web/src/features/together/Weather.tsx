@@ -41,7 +41,7 @@ export default function WeatherCard({ days }: { days: Day[] }) {
         <span className="text-[11px] text-muted">Open-Meteo 예보{fetched ? ` · ${ago(fetched)}` : ""}</span></div>
       <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(${Math.min(rows.length, 4)}, minmax(0,1fr))` }}>
         {rows.slice(0, 4).map((r, i) => (
-          <div key={i} className="rounded-[16px] bg-gradient-to-b from-[#EDF2FF] to-[#F7F5F1] py-3 flex flex-col items-center gap-0.5 text-center">
+          <div key={i} className="rounded-[16px] bg-sand py-3 flex flex-col items-center gap-0.5 text-center">
             <span className="text-[11px] font-bold text-coral">{r.label}</span>
             <span className="text-xs text-navy-soft">{r.cityLabel}</span>
             {r.w ? (<>

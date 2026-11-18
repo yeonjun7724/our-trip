@@ -15,8 +15,8 @@ const CONN_STYLE: Record<string, string> = {
 };
 
 const MODE_STYLE: Record<string, { icon: IconName; color: string }> = {
-  WALK: { icon: "walk", color: "#4F46E5" }, TRANSIT: { icon: "bus", color: "#E8833A" }, BUS: { icon: "bus", color: "#E8833A" },
-  SUBWAY: { icon: "route", color: "#7B5CC4" }, TRAIN: { icon: "train", color: "#333D4B" }, UNKNOWN: { icon: "route", color: "#B2B3BF" },
+  WALK: { icon: "walk", color: "#3182F6" }, TRANSIT: { icon: "bus", color: "#E8833A" }, BUS: { icon: "bus", color: "#E8833A" },
+  SUBWAY: { icon: "route", color: "#7B5CC4" }, TRAIN: { icon: "train", color: "#333D4B" }, UNKNOWN: { icon: "route", color: "#B0B8C1" },
 };
 
 /** Connector between two timeline nodes: mode, duration, source, and an action to fill unknown legs. */
@@ -24,7 +24,7 @@ function LegRow({ leg, onTransit }: { leg: Leg; onTransit?: () => void }) {
   const known = leg.duration_minutes != null;
   const st = MODE_STYLE[leg.mode] ?? MODE_STYLE.UNKNOWN;
   const line = !known
-    ? "repeating-linear-gradient(#D6D2CB 0 4px, transparent 4px 8px)"
+    ? "repeating-linear-gradient(#D1D6DB 0 4px, transparent 4px 8px)"
     : leg.mode === "WALK" ? `repeating-linear-gradient(${st.color} 0 3px, transparent 3px 7px)` : `linear-gradient(${st.color}, ${st.color})`;
   return (
     <div className="flex items-stretch gap-3 min-h-12">
@@ -69,16 +69,16 @@ function Entry({ e, prev, idx, count, onMove, onRemove, onTransit }: {
       {e.leg_in && <LegRow leg={e.leg_in} onTransit={() => onTransit(prev, e)} />}
       <div className="flex items-start gap-3">
         <div className="w-14 shrink-0 text-right pt-2.5">
-          <p className="font-mono font-bold text-[15px] leading-none">{rail ? e.departure ?? "–" : e.start ?? "–:–"}</p>
-          {!rail && e.end && <p className="font-mono text-[11px] text-muted mt-1">~{e.end}</p>}
-          {rail && <p className="font-mono text-[11px] text-muted mt-1">→{e.arrival ?? "–"}</p>}
+          <p className="num font-semibold font-bold text-[15px] leading-none">{rail ? e.departure ?? "–" : e.start ?? "–:–"}</p>
+          {!rail && e.end && <p className="num font-semibold text-[11px] text-muted mt-1">~{e.end}</p>}
+          {rail && <p className="num font-semibold text-[11px] text-muted mt-1">→{e.arrival ?? "–"}</p>}
         </div>
         <button onClick={toggle} aria-label={rail ? "탑승 완료" : "방문 완료"} aria-pressed={visited}
           className={`w-6 h-6 mt-2 shrink-0 rounded-full border-[2.5px] flex items-center justify-center transition-colors ${
             visited ? "bg-ok border-ok text-white" : rail ? "bg-navy border-navy text-white" : "bg-paper border-coral"}`}>
           {visited ? <Icon name="check" size={14} stroke={3} /> : rail ? <Icon name="train" size={12} /> : null}
         </button>
-        <div className={`flex-1 min-w-0 card p-4 transition-opacity ${visited ? "opacity-60" : ""} ${rail ? "!bg-[#FBFAF8] ring-1 ring-line" : ""}`}>
+        <div className={`flex-1 min-w-0 card p-4 transition-opacity ${visited ? "opacity-60" : ""} ${rail ? "!bg-[#F9FAFB] ring-1 ring-line" : ""}`}>
           <div className="flex items-start gap-2">
             <p className={`font-bold flex-1 min-w-0 ${visited ? "line-through" : ""}`}>{rail ? e.name : `${CATEGORY_ICON[e.category ?? ""] ?? "📍"} ${e.name}`}</p>
             <button className="tap -m-2 flex items-center justify-center text-muted" aria-label="더보기" aria-expanded={menu} onClick={() => setMenu(!menu)}><Icon name="menu" size={18} /></button>
@@ -275,13 +275,12 @@ export default function ItineraryPage() {
           const n = d.entries.filter((e) => e.kind === "PLACE").length;
           return (
             <button key={d.id} role="tab" aria-selected={on} onClick={() => setDayNo(d.day_number)}
-              className={`relative rounded-[18px] px-2 pt-2.5 pb-2.5 text-center transition-all active:scale-95 ${on ? "bg-navy text-white shadow-[0_10px_22px_-10px_rgba(21,24,43,.6)]" : "bg-paper text-navy shadow-[var(--shadow-card)]"}`}>
-              <span className={`block text-[11px] font-bold tracking-[.06em] ${on ? "text-white/60" : "text-muted"}`}>DAY {d.day_number}</span>
+              className={`relative rounded-[18px] px-2 pt-2.5 pb-2.5 text-center transition-all active:scale-95 ${on ? "bg-coral text-white" : "bg-paper text-navy"}`}>
+              <span className={`block text-[12px] font-semibold ${on ? "text-white/75" : "text-muted"}`}>DAY {d.day_number}</span>
               <span className="flex items-center justify-center gap-1.5 mt-0.5">
-                <span className="w-2 h-2 rounded-full shrink-0" style={{ background: CITY_COLOR[d.primary_city] }} />
-                <span className="text-[16px] font-[800] tracking-[-0.03em] truncate">{d.primary_city_label}</span>
+                <span className="text-[16px] font-bold tracking-[-0.03em] truncate">{d.primary_city_label}</span>
               </span>
-              <span className={`block text-[11px] mt-0.5 num ${on ? "text-white/60" : "text-muted"}`}>{n ? `${n}곳` : "비어 있음"}</span>
+              <span className={`block text-[12px] mt-0.5 num ${on ? "text-white/75" : "text-muted"}`}>{n ? `${n}곳` : "비어 있음"}</span>
             </button>
           );
         })}

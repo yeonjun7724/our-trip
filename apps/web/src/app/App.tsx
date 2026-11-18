@@ -29,10 +29,10 @@ function BottomNav() {
   const item = (n: (typeof NAV)[number]) => (
     <li key={n.to}>
       <NavLink to={n.to} end={n.to === "/"}
-        className={({ isActive }) => `group h-full flex flex-col items-center justify-center gap-[3px] text-[11px] font-semibold transition-colors ${isActive ? "text-navy" : "text-[#A3A5B2]"}`}>
+        className={({ isActive }) => `group h-full flex flex-col items-center justify-center gap-1 text-[11px] font-medium transition-colors ${isActive ? "text-navy" : "text-[#B0B8C1]"}`}>
         {({ isActive }) => (<>
-          <span className={`w-12 h-8 rounded-full flex items-center justify-center transition-all duration-200 group-active:scale-90 ${isActive ? "bg-coral-soft text-coral" : ""}`}>
-            <Icon name={n.icon} size={22} stroke={isActive ? 2.4 : 2} />
+          <span className="flex items-center justify-center transition-transform duration-150 group-active:scale-90">
+            <Icon name={n.icon} size={24} stroke={isActive ? 2.3 : 2} />
           </span>
           {n.label}
         </>)}
@@ -41,13 +41,13 @@ function BottomNav() {
   );
   return (
     <>
-      <nav className="fixed inset-x-0 z-30 px-3 pointer-events-none" style={{ bottom: "calc(var(--sab) + var(--nav-gap))" }} aria-label="주요 메뉴">
-        <ul className="pointer-events-auto grid grid-cols-5 max-w-[520px] mx-auto h-[var(--nav-h)] rounded-[26px] bg-paper/[.96] backdrop-blur-xl backdrop-saturate-150 shadow-[0_0_0_1px_rgba(21,24,43,.06),0_12px_32px_-8px_rgba(21,24,43,.22)]">
+      <nav className="fixed inset-x-0 bottom-0 z-30 bg-paper/95 backdrop-blur-xl backdrop-saturate-150 border-t border-line rounded-t-[20px]" style={{ paddingBottom: "var(--sab)" }} aria-label="주요 메뉴">
+        <ul className="grid grid-cols-5 max-w-[640px] mx-auto h-[var(--nav-h)]">
           {item(NAV[0])}{item(NAV[1])}
           <li className="flex items-center justify-center">
             <button onClick={() => setAddOpen(true)} aria-label="장소 추가"
-              className="w-[52px] h-[52px] rounded-[18px] text-white flex items-center justify-center active:scale-90 transition-transform bg-[linear-gradient(145deg,#FF7B4D_0%,#FF5A36_45%,#4F46E5_140%)] shadow-[0_8px_18px_-6px_rgba(255,90,54,.65)]">
-              <Icon name="plus" size={26} stroke={2.6} />
+              className="w-11 h-11 rounded-[14px] text-white flex items-center justify-center active:scale-90 active:bg-coral-ink transition-transform bg-coral">
+              <Icon name="plus" size={24} stroke={2.6} />
             </button>
           </li>
           {item(NAV[2])}{item(NAV[3])}
@@ -61,9 +61,9 @@ function BottomNav() {
             ["🔗", "네이버·카카오 링크 붙여넣기", "공유 링크를 북마크로 저장하고 위치를 지정해요", () => nav("/places/new")],
           ] as const).map(([e, t, d, fn]) => (
             <button key={t} className="w-full rounded-[16px] px-3 py-3.5 flex items-center gap-4 text-left active:bg-sand transition-colors" onClick={() => { setAddOpen(false); fn(); }}>
-              <span className="text-[22px] w-12 h-12 rounded-[16px] bg-gradient-to-br from-coral-soft to-sunset-soft flex items-center justify-center shrink-0">{e}</span>
+              <span className="text-[22px] w-12 h-12 rounded-full bg-sand flex items-center justify-center shrink-0">{e}</span>
               <span className="flex-1 min-w-0"><span className="block font-semibold text-[16px]">{t}</span><span className="block text-[14px] text-muted mt-0.5">{d}</span></span>
-              <Icon name="chevronR" size={20} className="text-[#B2B3BF]" />
+              <Icon name="chevronR" size={20} className="text-[#B0B8C1]" />
             </button>
           ))}
         </div>

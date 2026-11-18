@@ -19,8 +19,8 @@ export function ListSkeleton({ rows = 3 }: { rows?: number }) {
 
 export function EmptyState({ icon = "🗺️", title, body, action }: { icon?: string; title: string; body?: ReactNode; action?: ReactNode }) {
   return (
-    <div className="card px-6 py-11 text-center">
-      <div className="mx-auto w-[76px] h-[76px] rounded-[24px] bg-gradient-to-br from-coral-soft to-sunset-soft flex items-center justify-center text-[36px] mb-4 rotate-[-4deg] shadow-[0_8px_20px_-10px_rgba(79,70,229,.45)]" aria-hidden>{icon}</div>
+    <div className="card px-6 py-12 text-center">
+      <div className="mx-auto w-[72px] h-[72px] rounded-full bg-sand flex items-center justify-center text-[34px] mb-4" aria-hidden>{icon}</div>
       <p className="font-bold text-[18px] tracking-[-0.025em]">{title}</p>
       {body && <p className="text-[15px] text-muted mt-1.5 leading-relaxed">{body}</p>}
       {action && <div className="mt-6">{action}</div>}
@@ -47,7 +47,7 @@ export function InlineError({ error }: { error: unknown }) {
 }
 
 const STATUS_STYLE: Record<DataStatus, string> = {
-  USER_ENTERED: "bg-sand text-navy-soft", VERIFIED_STATIC: "bg-coral-soft text-[#3F37C9]", SCHEDULED: "bg-[#E5F8EF] text-ok",
+  USER_ENTERED: "bg-sand text-navy-soft", VERIFIED_STATIC: "bg-coral-soft text-coral-ink", SCHEDULED: "bg-[#E5F8EF] text-ok",
   LIVE: "bg-[#E5F8EF] text-ok", ESTIMATED: "bg-[#FFF3E0] text-warn", UNAVAILABLE: "bg-sand text-muted", STALE: "bg-[#FFEEF0] text-bad",
 };
 
@@ -94,9 +94,9 @@ export function Sheet({ open, onClose, title, children, tall = false, backdrop =
   };
   return createPortal(
     <div className="fixed inset-0 z-40 flex flex-col justify-end pointer-events-none" role="dialog" aria-modal={backdrop}>
-      {backdrop && <button className="absolute inset-0 bg-[#15182B]/45 backdrop-blur-[2px] fade-in pointer-events-auto" aria-label="닫기" onClick={onClose} />}
+      {backdrop && <button className="absolute inset-0 bg-black/45 fade-in pointer-events-auto" aria-label="닫기" onClick={onClose} />}
       <div
-        className="sheet-in pointer-events-auto relative bg-paper rounded-t-[28px] shadow-[0_-12px_40px_-12px_rgba(21,24,43,.25)] w-full max-w-[640px] mx-auto flex flex-col"
+        className="sheet-in pointer-events-auto relative bg-paper rounded-t-[24px] w-full max-w-[640px] mx-auto flex flex-col"
         style={{
           height: snap === "full" ? "92dvh" : "58dvh",
           transform: drag ? `translateY(${Math.max(drag, -80)}px)` : undefined,
@@ -105,9 +105,9 @@ export function Sheet({ open, onClose, title, children, tall = false, backdrop =
         }}
       >
         <div className="touch-none cursor-grab select-none" {...handlers}>
-          <div className="pt-2.5 pb-1 flex justify-center"><span className="w-10 h-1 rounded-full bg-[#D6D2CB]" /></div>
+          <div className="pt-2.5 pb-1 flex justify-center"><span className="w-9 h-1 rounded-full bg-[#D1D6DB]" /></div>
           <div className="flex items-center gap-2 pl-5 pr-3 pt-1 pb-3">
-            <div className="flex-1 min-w-0 font-bold text-[20px] tracking-[-0.025em] truncate">{title}</div>
+            <div className="flex-1 min-w-0 font-bold text-[20px] tracking-[-0.03em] truncate">{title}</div>
             <button className="tap rounded-full text-muted bg-sand/0 hover:bg-sand active:bg-line flex items-center justify-center" onPointerDown={(e) => e.stopPropagation()}
               onClick={onClose} aria-label="닫기"><Icon name="x" /></button>
           </div>
@@ -137,11 +137,11 @@ export function Segmented<T extends string>({ value, options, onChange, size = "
 }) {
   if (size === "md") {
     return (
-      <div className="bg-[#EAE6DF]/70 rounded-[16px] p-1 flex gap-1 overflow-x-auto no-scrollbar" role="tablist">
+      <div className="bg-[#E9ECEF] rounded-[14px] p-1 flex gap-1 overflow-x-auto no-scrollbar" role="tablist">
         {options.map((o) => (
           <button key={o.value} role="tab" aria-selected={value === o.value} onClick={() => onChange(o.value)}
-            className={`shrink-0 flex-1 min-w-fit whitespace-nowrap px-3.5 min-h-10 rounded-[12px] text-[15px] font-semibold transition-all duration-200 ${
-              value === o.value ? "bg-paper text-navy shadow-[0_1px_2px_rgba(21,24,43,.08),0_2px_8px_-2px_rgba(21,24,43,.1)]" : "text-muted active:text-navy-soft"}`}>
+            className={`shrink-0 flex-1 min-w-fit whitespace-nowrap px-3.5 min-h-10 rounded-[11px] text-[15px] font-semibold transition-all duration-200 ${
+              value === o.value ? "bg-paper text-navy shadow-[0_1px_3px_rgba(0,0,0,.08)]" : "text-muted active:text-navy-soft"}`}>
             {o.label}
           </button>
         ))}
@@ -153,7 +153,7 @@ export function Segmented<T extends string>({ value, options, onChange, size = "
       {options.map((o) => (
         <button key={o.value} role="tab" aria-selected={value === o.value} onClick={() => onChange(o.value)}
           className={`shrink-0 rounded-full px-3.5 min-h-9 text-[14px] font-semibold transition-all ${
-            value === o.value ? "bg-navy text-white shadow-[0_4px_10px_-4px_rgba(21,24,43,.5)]" : "bg-paper text-navy-soft shadow-[inset_0_0_0_1px_var(--color-line)]"}`}>
+            value === o.value ? "bg-navy text-white" : "bg-paper text-navy-soft active:bg-line"}`}>
           {o.label}
         </button>
       ))}
@@ -179,11 +179,11 @@ export function Header({ title, sub, right, eyebrow }: { title: ReactNode; sub?:
           <p className="flex-1 text-center font-bold tracking-[-0.02em] truncate">{title}</p>
         </div>
       </div>
-      <header className="flex items-end gap-3 mb-6 pt-3">
+      <header className="flex items-end gap-3 mb-5 pt-4">
         <div className="flex-1 min-w-0">
-          {eyebrow && <p className="eyebrow mb-1.5">{eyebrow}</p>}
-          <h1 className="text-[30px] leading-[1.2] font-[800] tracking-[-0.035em]">{title}</h1>
-          {sub && <p className="text-[15px] text-muted mt-1.5">{sub}</p>}
+          {eyebrow && <p className="eyebrow mb-1">{eyebrow}</p>}
+          <h1 className="text-[26px] leading-[1.3] font-bold tracking-[-0.03em]">{title}</h1>
+          {sub && <p className="text-[15px] text-muted mt-1">{sub}</p>}
         </div>
         {right}
       </header>
@@ -192,6 +192,6 @@ export function Header({ title, sub, right, eyebrow }: { title: ReactNode; sub?:
 }
 
 export function Notice({ children, tone = "info" }: { children: ReactNode; tone?: "info" | "warn" | "bad" }) {
-  const cls = tone === "warn" ? "bg-[#FFF4E5] text-[#8F4E00] shadow-[inset_3px_0_0_#DB7600]" : tone === "bad" ? "bg-[#FFEEEF] text-[#C4252B] shadow-[inset_3px_0_0_#E5484D]" : "bg-sand text-navy-soft shadow-[inset_3px_0_0_#D6D2CB]";
+  const cls = tone === "warn" ? "bg-[#FFF3E0] text-[#9A5B00]" : tone === "bad" ? "bg-[#FFEEF0] text-[#D22030]" : "bg-sand text-navy-soft";
   return <div className={`rounded-[14px] px-4 py-3 text-[14px] leading-relaxed ${cls}`}>{children}</div>;
 }
