@@ -48,5 +48,4 @@ railway logs --service web
 
 ## GitHub
 
-저장소는 로컬 git으로 초기화만 했고 **커밋과 원격 저장소 생성은 하지 않았습니다.** 원하면 이렇게 올릴 수 있습니다.
-`gh repo create our-trip --private --source . --push` (커밋 후 실행)
+공개 저장소: https://github.com/yeonjun7724/our-trip (branch `main`)
