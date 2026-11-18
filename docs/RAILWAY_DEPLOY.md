@@ -30,10 +30,7 @@ railway variables --service web --set "ODSAY_API_KEY=<ODsay 키>"
 curl https://web-production-9b21ca26.up.railway.app/api/providers/status
 ```
 
-ODsay 서버 키는 호출 서버의 IP를 등록해야 합니다. Railway의 기본 송신 IP는 고정되어 있지 않으므로 둘 중 하나를 고릅니다.
-(a) Railway Static Outbound IPs(유료 플랜 기능)를 켜고 그 IP를 ODsay 콘솔에 등록합니다.
-(b) ODsay가 허용하는 다른 플랫폼 등록 방식을 씁니다.
-(b)는 **검증하지 않았습니다.** 키를 넣은 뒤 상태가 `AUTH_FAILED`로 나오면 IP 등록 문제일 가능성이 큽니다.
+ODsay 키는 **URI 플랫폼**(`web-production-9b21ca26.up.railway.app`)으로 등록했습니다. 서버가 ODsay를 호출할 때 `Referer: PUBLIC_BASE_URL`을 보내야 인증됩니다(2026-11-18 실험으로 확인: 헤더가 없거나 Origin만 보내면 실패). 그래서 고정 IP는 필요 없습니다. 무료(Basic) 한도는 하루 30건입니다.
 
 ## 재배포
 
