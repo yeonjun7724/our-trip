@@ -1,0 +1,12 @@
+**/node_modules
+**/.venv
+**/__pycache__
+**/dist
+.git
+.env
+.osm_extract
+.osmnx_cache
+apps/web/e2e-results
+apps/api/tests
+data/graphs/build.log
+docs

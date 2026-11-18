@@ -1,0 +1,13 @@
+node_modules/
+.venv/
+__pycache__/
+*.pyc
+.env
+.osm_extract/
+.osmnx_cache/
+data/graphs/build.log
+apps/web/e2e-results/
+apps/web/test-results/
+.pytest_cache/
+*.tmp.mjs
+apps/api/tests/

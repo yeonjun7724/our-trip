@@ -1,0 +1,143 @@
+{
+  "zones": {
+    "busan_haeundae": {
+      "zone": "busan_haeundae",
+      "city": "busan",
+      "label": "해운대·광안리",
+      "centre": [
+        35.157,
+        129.14
+      ],
+      "half_size_m": 3500,
+      "nodes": 7567,
+      "edges": 20610,
+      "stops": 233,
+      "source": "Geofabrik south-korea-latest.osm.pbf → osmnx.graph_from_xml (walk filter)",
+      "osm_data_timestamp": "2026-11-17T21:24:30Z",
+      "built_at": "2026-11-18T01:44:07.741759+00:00",
+      "seconds": 7.9
+    },
+    "busan_central": {
+      "zone": "busan_central",
+      "city": "busan",
+      "label": "부산역·남포·영도·감천",
+      "centre": [
+        35.1,
+        129.035
+      ],
+      "half_size_m": 3200,
+      "nodes": 6697,
+      "edges": 19206,
+      "stops": 134,
+      "source": "Geofabrik south-korea-latest.osm.pbf → osmnx.graph_from_xml (walk filter)",
+      "osm_data_timestamp": "2026-11-17T21:24:30Z",
+      "built_at": "2026-11-18T01:44:17.804509+00:00",
+      "seconds": 10.1
+    },
+    "busan_seomyeon": {
+      "zone": "busan_seomyeon",
+      "city": "busan",
+      "label": "서면·전포",
+      "centre": [
+        35.155,
+        129.062
+      ],
+      "half_size_m": 1800,
+      "nodes": 2951,
+      "edges": 8398,
+      "stops": 85,
+      "source": "Geofabrik south-korea-latest.osm.pbf → osmnx.graph_from_xml (walk filter)",
+      "osm_data_timestamp": "2026-11-17T21:24:30Z",
+      "built_at": "2026-11-18T01:44:21.225529+00:00",
+      "seconds": 3.4
+    },
+    "gyeongju_downtown": {
+      "zone": "gyeongju_downtown",
+      "city": "gyeongju",
+      "label": "경주 시내·황리단길·대릉원",
+      "centre": [
+        35.835,
+        129.215
+      ],
+      "half_size_m": 3000,
+      "nodes": 3877,
+      "edges": 11178,
+      "stops": 180,
+      "source": "Geofabrik south-korea-latest.osm.pbf → osmnx.graph_from_xml (walk filter)",
+      "osm_data_timestamp": "2026-11-17T21:24:30Z",
+      "built_at": "2026-11-18T01:44:26.095359+00:00",
+      "seconds": 4.9
+    },
+    "gyeongju_station": {
+      "zone": "gyeongju_station",
+      "city": "gyeongju",
+      "label": "경주역(KTX) 주변",
+      "centre": [
+        35.798,
+        129.139
+      ],
+      "half_size_m": 1200,
+      "nodes": 181,
+      "edges": 498,
+      "stops": 21,
+      "source": "Geofabrik south-korea-latest.osm.pbf → osmnx.graph_from_xml (walk filter)",
+      "osm_data_timestamp": "2026-11-17T21:24:30Z",
+      "built_at": "2026-11-18T01:44:26.359651+00:00",
+      "seconds": 0.3
+    },
+    "pohang_downtown": {
+      "zone": "pohang_downtown",
+      "city": "pohang",
+      "label": "포항 시내·영일대·죽도시장·포항역",
+      "centre": [
+        36.05,
+        129.365
+      ],
+      "half_size_m": 4000,
+      "nodes": 8919,
+      "edges": 25450,
+      "stops": 433,
+      "source": "Geofabrik south-korea-latest.osm.pbf → osmnx.graph_from_xml (walk filter)",
+      "osm_data_timestamp": "2026-11-17T21:24:30Z",
+      "built_at": "2026-11-18T01:44:34.908798+00:00",
+      "seconds": 8.5
+    },
+    "pohang_guryongpo": {
+      "zone": "pohang_guryongpo",
+      "city": "pohang",
+      "label": "구룡포",
+      "centre": [
+        35.989,
+        129.556
+      ],
+      "half_size_m": 1500,
+      "nodes": 727,
+      "edges": 1980,
+      "stops": 29,
+      "source": "Geofabrik south-korea-latest.osm.pbf → osmnx.graph_from_xml (walk filter)",
+      "osm_data_timestamp": "2026-11-17T21:24:30Z",
+      "built_at": "2026-11-18T01:44:35.959360+00:00",
+      "seconds": 1.1
+    },
+    "pohang_homigot": {
+      "zone": "pohang_homigot",
+      "city": "pohang",
+      "label": "호미곶",
+      "centre": [
+        36.077,
+        129.567
+      ],
+      "half_size_m": 1500,
+      "nodes": 356,
+      "edges": 954,
+      "stops": 19,
+      "source": "Geofabrik south-korea-latest.osm.pbf → osmnx.graph_from_xml (walk filter)",
+      "osm_data_timestamp": "2026-11-17T21:24:30Z",
+      "built_at": "2026-11-18T01:44:36.586432+00:00",
+      "seconds": 0.6
+    }
+  },
+  "osmnx_version": "2.1.2",
+  "network_type": "walk",
+  "license": "ODbL 1.0 — © OpenStreetMap contributors"
+}

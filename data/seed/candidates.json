@@ -1,0 +1,167 @@
+[
+  {
+    "city": "busan",
+    "name": "광안리",
+    "category": "ATTRACTION",
+    "query": "광안리해수욕장",
+    "latitude": 35.1508879,
+    "longitude": 129.1167806,
+    "osm_ref": "way/107642460",
+    "osm_display_name": "광안리해수욕장, 광안2동, 수영구, 부산광역시, 대한민국",
+    "coordinate_source": "OSM_NOMINATIM"
+  },
+  {
+    "city": "busan",
+    "name": "해운대",
+    "category": "ATTRACTION",
+    "query": "해운대해수욕장",
+    "latitude": 35.1592859,
+    "longitude": 129.1586091,
+    "osm_ref": "node/5004247384",
+    "osm_display_name": "해운대해수욕장, 해운대해변로, 우동, 우1동, 해운대구, 부산광역시, 48093, 대한민국",
+    "coordinate_source": "OSM_NOMINATIM"
+  },
+  {
+    "city": "busan",
+    "name": "흰여울문화마을",
+    "category": "ATTRACTION",
+    "query": "흰여울문화마을",
+    "latitude": 35.0773961,
+    "longitude": 129.0456513,
+    "osm_ref": "node/5450264422",
+    "osm_display_name": "흰여울문화마을, 갈맷길, 영선동4가, 영선2동, 영도구, 부산광역시, 49078, 대한민국",
+    "coordinate_source": "OSM_NOMINATIM"
+  },
+  {
+    "city": "busan",
+    "name": "감천문화마을",
+    "category": "ATTRACTION",
+    "query": "감천문화마을",
+    "latitude": 35.0963371,
+    "longitude": 129.0087897,
+    "osm_ref": "way/382693934",
+    "osm_display_name": "감천문화마을, 천해로, 감천동, 감천2동, 사하구, 부산광역시, 49374, 대한민국",
+    "coordinate_source": "OSM_NOMINATIM"
+  },
+  {
+    "city": "busan",
+    "name": "전포 카페거리",
+    "category": "CAFE",
+    "query": "전포카페거리",
+    "latitude": null,
+    "longitude": null,
+    "osm_ref": null,
+    "osm_display_name": null,
+    "coordinate_source": null
+  },
+  {
+    "city": "gyeongju",
+    "name": "황리단길",
+    "category": "ATTRACTION",
+    "query": "황리단길",
+    "latitude": 35.8388987,
+    "longitude": 129.2098001,
+    "osm_ref": "node/3756798918",
+    "osm_display_name": "황리단길, 포석로1095번길, 사정동, 황남동, 경주시, 경상북도, 38158, 대한민국",
+    "coordinate_source": "OSM_NOMINATIM"
+  },
+  {
+    "city": "gyeongju",
+    "name": "대릉원",
+    "category": "ATTRACTION",
+    "query": "대릉원",
+    "latitude": 35.8389483,
+    "longitude": 129.2119324,
+    "osm_ref": "way/382249596",
+    "osm_display_name": "대릉원 황남대총, 9, 계림로, 사정동, 황남동, 국당마을, 경주시, 경상북도, 38164, 대한민국",
+    "coordinate_source": "OSM_NOMINATIM"
+  },
+  {
+    "city": "gyeongju",
+    "name": "첨성대",
+    "category": "ATTRACTION",
+    "query": "첨성대",
+    "latitude": 35.834704,
+    "longitude": 129.2189849,
+    "osm_ref": "way/382132601",
+    "osm_display_name": "첨성대, 경주 역사탐방 자전거길, 인왕동, 월성동, 경주시, 경상북도, 38161, 대한민국",
+    "coordinate_source": "OSM_NOMINATIM"
+  },
+  {
+    "city": "gyeongju",
+    "name": "동궁과 월지",
+    "category": "ATTRACTION",
+    "query": "동궁과 월지",
+    "latitude": 35.8347003,
+    "longitude": 129.2264375,
+    "osm_ref": "way/477417220",
+    "osm_display_name": "경주 동궁과 월지, 월성동, 경주시, 경상북도, 대한민국",
+    "coordinate_source": "OSM_NOMINATIM"
+  },
+  {
+    "city": "gyeongju",
+    "name": "월정교",
+    "category": "ATTRACTION",
+    "query": "월정교",
+    "latitude": 35.8292567,
+    "longitude": 129.2181368,
+    "osm_ref": "way/539995254",
+    "osm_display_name": "월정교, 인왕동, 월성동, 경주시, 경상북도, 38164, 대한민국",
+    "coordinate_source": "OSM_NOMINATIM"
+  },
+  {
+    "city": "pohang",
+    "name": "영일대",
+    "category": "ATTRACTION",
+    "query": "영일대해수욕장",
+    "latitude": 36.0546137,
+    "longitude": 129.3765326,
+    "osm_ref": "node/5789575053",
+    "osm_display_name": "영일대해수욕장, 삼호로, 중앙동, 두호동, 북구, 포항시, 경상북도, 37708, 대한민국",
+    "coordinate_source": "OSM_NOMINATIM"
+  },
+  {
+    "city": "pohang",
+    "name": "스페이스워크",
+    "category": "ATTRACTION",
+    "query": "스페이스워크",
+    "latitude": 36.0651092,
+    "longitude": 129.3904401,
+    "osm_ref": "node/9664869462",
+    "osm_display_name": "스페이스워크, 해안로241번길, 두호동, 북구, 포항시, 경상북도, 37600, 대한민국",
+    "coordinate_source": "OSM_NOMINATIM"
+  },
+  {
+    "city": "pohang",
+    "name": "구룡포",
+    "category": "ATTRACTION",
+    "query": "구룡포 일본인 가옥거리",
+    "latitude": null,
+    "longitude": null,
+    "osm_ref": null,
+    "osm_display_name": null,
+    "coordinate_source": null
+  },
+  {
+    "city": "pohang",
+    "name": "호미곶",
+    "category": "ATTRACTION",
+    "query": "호미곶 해맞이광장",
+    "latitude": 36.0760228,
+    "longitude": 129.566029,
+    "osm_ref": "node/12146020775",
+    "osm_display_name": "호미곶 해맞이광장, 해맞이로, 호미곶면, 남구, 포항시, 경상북도, 37928, 대한민국",
+    "coordinate_source": "OSM_NOMINATIM"
+  },
+  {
+    "city": "pohang",
+    "name": "죽도시장",
+    "category": "FOOD",
+    "query": "죽도시장",
+    "latitude": 36.0350097,
+    "longitude": 129.3677506,
+    "osm_ref": "way/172241993",
+    "osm_display_name": "죽도시장, 죽도시장14길, 죽도동, 북구, 포항시, 경상북도, 37787, 대한민국",
+    "coordinate_source": "OSM_NOMINATIM"
+  }
+]
