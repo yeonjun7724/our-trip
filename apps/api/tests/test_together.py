@@ -9,17 +9,17 @@ def test_expenses_and_settlement(client, client2):
     t = make_trip(client)["trip"]
     join_trip(client, client2)
     me = client.get("/api/me").json()["member"]["id"]
-    gf = client2.get("/api/me").json()["member"]["id"]
+    pal = client2.get("/api/me").json()["member"]["id"]
     # I paid 30,000 for both; she paid 10,000 for both; she paid 5,000 only for herself
     assert client.post(f"/api/trips/{t['id']}/expenses", json={"title": "KTX", "amount": 30000, "category": "TRANSPORT",
-                       "split_member_ids": [me, gf]}).status_code == 201
-    client2.post(f"/api/trips/{t['id']}/expenses", json={"title": "밀면", "amount": 10000, "category": "FOOD", "split_member_ids": [me, gf]})
+                       "split_member_ids": [me, pal]}).status_code == 201
+    client2.post(f"/api/trips/{t['id']}/expenses", json={"title": "밀면", "amount": 10000, "category": "FOOD", "split_member_ids": [me, pal]})
     client2.post(f"/api/trips/{t['id']}/expenses", json={"title": "기념품", "amount": 5000, "category": "SHOPPING"})
     r = client.get(f"/api/trips/{t['id']}/expenses").json()
     assert r["total"] == 45000 and r["by_category"]["TRANSPORT"] == 30000
     bal = {m["id"]: m["balance"] for m in r["members"]}
-    assert bal[me] == 10000 and bal[gf] == -10000
-    assert r["transfers"] == [{"from": gf, "to": me, "amount": 10000, "from_name": "여자친구", "to_name": "연준"}]
+    assert bal[me] == 10000 and bal[pal] == -10000
+    assert r["transfers"] == [{"from": pal, "to": me, "amount": 10000, "from_name": "철수", "to_name": "연준"}]
     bad = client.post(f"/api/trips/{t['id']}/expenses", json={"title": "x", "amount": 0})
     assert bad.status_code == 422
     eid = r["expenses"][0]["id"]
@@ -34,7 +34,7 @@ def test_checklist_shared_and_deduplicated(client, client2):
     items = client2.get(f"/api/trips/{t['id']}/checklist").json()
     client2.patch(f"/api/checklist/{items[0]['id']}", json={"done": True})
     again = client.get(f"/api/trips/{t['id']}/checklist").json()
-    assert again[0]["done"] is True and again[0]["done_by"] == "여자친구"
+    assert again[0]["done"] is True and again[0]["done_by"] == "철수"
     assert client.delete(f"/api/checklist/{items[1]['id']}").status_code == 200
 
 

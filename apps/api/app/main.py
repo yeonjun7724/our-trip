@@ -74,7 +74,7 @@ async def origin_guard(request: Request, call_next):
                                                                          "message": "허용되지 않은 출처의 요청이에요."}})
     response = await call_next(request)
     response.headers.setdefault("X-Content-Type-Options", "nosniff")
-    response.headers.setdefault("Referrer-Policy", "same-origin")
+    response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
     if request.url.path.startswith("/api/"):
         response.headers.setdefault("Cache-Control", "no-store")
     return response

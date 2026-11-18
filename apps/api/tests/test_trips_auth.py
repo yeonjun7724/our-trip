@@ -26,7 +26,7 @@ def test_dates_set_day_dates_and_extend(client):
 def test_seed_candidates_never_invent_coordinates(client):
     data = make_trip(client, seed_candidates=True)
     places = client.get(f"/api/trips/{data['trip']['id']}/places").json()
-    assert data["seeded_places"] == len(places) == 15
+    assert data["seeded_places"] == len(places) == 13
     for p in places:
         if p["latitude"] is None:
             assert p["coordinate_source"] == "NONE"
@@ -43,7 +43,7 @@ def test_invite_join_separate_sessions_and_access_control(client, client2, app):
     m2 = client2.get("/api/me").json()["member"]
     assert m1["id"] != m2["id"] and m2["role"] == "MEMBER"
     members = client2.get(f"/api/trips/{t['id']}").json()["members"]
-    assert {m["nickname"] for m in members} == {"연준", "여자친구"}
+    assert {m["nickname"] for m in members} == {"연준", "철수"}
     # non-owner can't create invites
     assert client2.post(f"/api/trips/{t['id']}/invites").status_code == 403
     # a third person with their own trip cannot see this trip
@@ -111,5 +111,5 @@ def test_activity_feed(client, client2):
     join_trip(client, client2)
     client2.post(f"/api/trips/{t['id']}/places", json={"name": "광안리", "city": "busan"})
     feed = client.get(f"/api/trips/{t['id']}/activity").json()
-    assert feed[0]["member"] == "여자친구" and "광안리" in feed[0]["summary"]
+    assert feed[0]["member"] == "철수" and "광안리" in feed[0]["summary"]
     assert feed[0]["is_me"] is False

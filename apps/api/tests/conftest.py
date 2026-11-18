@@ -139,7 +139,7 @@ def make_trip(client, **kw):
     return r.json()
 
 
-def join_trip(owner_client, other_client, nickname="여자친구"):
+def join_trip(owner_client, other_client, nickname="철수"):
     trip = owner_client.get("/api/me").json()
     inv = owner_client.post(f"/api/trips/{trip['trip_id']}/invites").json()
     r = other_client.post("/api/invites/join", json={"token": inv["token"], "nickname": nickname})

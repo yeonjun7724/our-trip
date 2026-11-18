@@ -47,7 +47,7 @@ test("방 만들기 없이 지도에서 바로: 이름 선택 → 지도 탭으�
   // partner opens the same URL, picks a new name, sees and votes
   const gf = await newPhone(browser);
   const g = gf.page;
-  await enter(g, `지은${stamp}`);
+  await enter(g, `민수${stamp}`);
   await g.goto("/wishlist");
   await g.getByText(spot).click();
   await g.getByRole("radio", { name: "가면 좋아" }).click();
@@ -81,7 +81,7 @@ test("방 만들기 없이 지도에서 바로: 이름 선택 → 지도 탭으�
   // a returning device picks the existing name (no duplicate member)
   const again = await newPhone(browser);
   await again.page.goto("/");
-  await again.page.getByRole("button", { name: `지은${stamp}` }).click();
+  await again.page.getByRole("button", { name: `민수${stamp}` }).click();
   await expect(again.page.getByLabel("장소 검색")).toBeVisible();
 
   // itinerary: partner checks the place visited after owner schedules it

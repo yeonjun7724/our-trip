@@ -44,17 +44,6 @@
     "coordinate_source": "OSM_NOMINATIM"
   },
   {
-    "city": "busan",
-    "name": "전포 카페거리",
-    "category": "CAFE",
-    "query": "전포카페거리",
-    "latitude": null,
-    "longitude": null,
-    "osm_ref": null,
-    "osm_display_name": null,
-    "coordinate_source": null
-  },
-  {
     "city": "gyeongju",
     "name": "황리단길",
     "category": "ATTRACTION",
@@ -130,17 +119,6 @@
     "osm_ref": "node/9664869462",
     "osm_display_name": "스페이스워크, 해안로241번길, 두호동, 북구, 포항시, 경상북도, 37600, 대한민국",
     "coordinate_source": "OSM_NOMINATIM"
-  },
-  {
-    "city": "pohang",
-    "name": "구룡포",
-    "category": "ATTRACTION",
-    "query": "구룡포 일본인 가옥거리",
-    "latitude": null,
-    "longitude": null,
-    "osm_ref": null,
-    "osm_display_name": null,
-    "coordinate_source": null
   },
   {
     "city": "pohang",
