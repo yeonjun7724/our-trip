@@ -26,7 +26,10 @@ export interface QuickAddInit { lat: number; lon: number; name?: string; source?
 export default function QuickAdd({ init, onClose, onSaved }: { init: QuickAddInit | null; onClose: () => void; onSaved: (id: string) => void }) {
   const tripId = useTripId()!;
   const [f, setF] = useState({ name: "", city: "busan" as City, category: "ATTRACTION", preference: "" as Pref | "" });
-  useEffect(() => { if (init) setF((x) => ({ ...x, name: init.name ?? "", city: guessCity(init.lat, init.lon) })); }, [init]);
+  useEffect(() => {
+    // moving the spot while the sheet is open keeps what was already typed
+    setF((x) => (init ? { ...x, name: init.name ?? x.name, city: guessCity(init.lat, init.lon) } : { ...x, name: "" }));
+  }, [init]);
   const save = useTripMutation(() => api.post<{ place: Place; possible_duplicates: { name: string }[] }>(`/api/trips/${tripId}/places`, {
     name: f.name.trim(), city: f.city, category: f.category, preference: f.preference || null,
     latitude: init!.lat, longitude: init!.lon, coordinate_source: init!.source ?? "USER_PICKED", osm_ref: init!.osm_ref ?? null,
@@ -38,7 +41,7 @@ export default function QuickAdd({ init, onClose, onSaved }: { init: QuickAddIni
   return (
     <Sheet open={!!init} onClose={onClose} backdrop={false} title={<span className="flex items-center gap-2">📍 여기에 장소 추가</span>}>
       <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); if (f.name.trim()) save.mutate(undefined); }}>
-        <input className="field !text-lg !min-h-12 font-semibold" autoFocus required maxLength={120} placeholder="어떤 곳인가요? (예: 해리단길 카페)" aria-label="장소 이름"
+        <input className="field !text-lg !min-h-12 font-semibold" required maxLength={120} placeholder="어떤 곳인가요? (예: 해리단길 카페)" aria-label="장소 이름"
           value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} />
         <div>
           <p className="label">분류</p>

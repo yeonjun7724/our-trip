@@ -138,6 +138,9 @@ select.field { appearance: none; padding-right: 2.5rem;
 .ot-stop { width: 26px; height: 26px; border-radius: 9px; background: #fff; display: flex; align-items: center; justify-content: center; font-size: 14px;
   border: 2px solid currentColor; box-shadow: 0 2px 6px rgba(0,0,0,.3); cursor: pointer; padding: 0; }
 @media (max-width: 640px) { .maplibregl-ctrl-top-right .maplibregl-ctrl-group:first-child { display: none; } }
+/* The map owns every touch on it, so a drag never turns into a page scroll or pull-to-refresh. */
+.maplibregl-map, .maplibregl-canvas-container, .ot-pin, .ot-stop { touch-action: none; }
+.map-under-nav { overscroll-behavior: none; }
 
 /* declutter: names only when zoomed in (selected pin always keeps its name) */
 .z-lo .ot-pin:not(.sel) .lbl { display: none; }
@@ -152,10 +155,13 @@ select.field { appearance: none; padding-right: 2.5rem;
 
 /* Map runs full-bleed under the floating nav; keep its required attribution above the nav. */
 .map-under-nav .maplibregl-ctrl-bottom-right, .map-under-nav .maplibregl-ctrl-bottom-left { bottom: calc(var(--nav-h) + var(--nav-gap) + var(--sab) + 2px); }
-/* The top-right corner belongs to the search bar on the map page: move the locate control (zoom is hidden on phones)
-   to the bottom-right, just above the place cards, as a large round thumb-reachable button. */
-.map-under-nav .maplibregl-ctrl-top-right { top: auto; bottom: calc(var(--nav-h) + var(--nav-gap) + var(--sab) + 148px); }
-.map-under-nav .maplibregl-ctrl-top-right .maplibregl-ctrl { margin: 0 12px 0 0; }
+/* The top-right corner belongs to the search bar on the map page: move the zoom and locate controls
+   to the bottom-right, just above the place cards, as large thumb-reachable buttons. */
+.map-under-nav .maplibregl-ctrl-top-right { top: auto; bottom: calc(var(--nav-h) + var(--nav-gap) + var(--sab) + 192px); transition: bottom .2s; }
+.map-under-nav.cards-min .maplibregl-ctrl-top-right { bottom: calc(var(--nav-h) + var(--nav-gap) + var(--sab) + 44px); }
+.map-under-nav .maplibregl-ctrl-top-right .maplibregl-ctrl { margin: 10px 12px 0 0; }
+.map-under-nav .maplibregl-ctrl-top-right .maplibregl-ctrl-group:first-child { display: block; }
+.map-under-nav .maplibregl-ctrl-top-right .maplibregl-ctrl-group:first-child button { width: 48px !important; height: 46px !important; }
 .map-under-nav .maplibregl-ctrl-top-right .maplibregl-ctrl-group:last-child { border-radius: 9999px !important; }
 .map-under-nav .maplibregl-ctrl-top-right .maplibregl-ctrl-group:last-child button { width: 48px !important; height: 48px !important; }
 .map-under-nav.sheet-open .maplibregl-ctrl-top-right { display: none; }

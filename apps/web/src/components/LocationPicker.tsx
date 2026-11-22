@@ -24,7 +24,8 @@ export default function LocationPicker({ open, onClose, onPick, city, initial, q
     mutationFn: () => api.get<{ results: GeoHit[] }>(`/api/geocode/search?${qs({ q, city })}`),
   });
   const markers = useMemo<MapMarker[]>(() => pick ? [{ id: "pick", lat: pick.lat, lon: pick.lon, icon: "📍", color: "#F04452", kind: "pick", label: pick.label }] : [], [pick]);
-  const fit = useMemo<[number, number][] | null>(() => (pick ? [[pick.lat, pick.lon]] : null), [pick?.lat, pick?.lon]);
+  // jump only to search hits: a spot the user tapped is already on screen, so leave the map where it is
+  const fit = useMemo<[number, number][] | null>(() => (pick?.source === "OSM_NOMINATIM" ? [[pick.lat, pick.lon]] : null), [pick]);
 
   return (
     <Sheet open={open} onClose={onClose} title="위치 지정" tall>
@@ -48,7 +49,7 @@ export default function LocationPicker({ open, onClose, onPick, city, initial, q
       )}
       <p className="text-xs text-muted mt-2">지도를 눌러 핀을 놓거나 검색 결과를 고르세요. 검색은 OpenStreetMap Nominatim을 사용해요.</p>
       <div className="mt-2 h-[48dvh] rounded-2xl overflow-hidden border border-line">
-        <MapView markers={markers} fit={fit} center={initial ? [initial.lon, initial.lat] : CITY_CENTER[city]} zoom={initial ? 15 : 12}
+        <MapView markers={markers} fit={fit} center={initial ? [initial.lon, initial.lat] : CITY_CENTER[city]} zoom={initial ? 15 : 12} bottomPad={40}
           onPick={(lat, lon) => setPick({ lat, lon, source: "USER_PICKED" })} showLocate />
       </div>
       <div className="mt-3 flex gap-2 items-center">

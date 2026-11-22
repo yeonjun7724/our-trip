@@ -29,12 +29,21 @@ const ROUTE_COLOR: Record<string, string> = {
   WALK: "#3182F6", BUS: "#E8833A", SUBWAY: "#7B5CC4", TRAIN: "#333D4B", EXPRESS_BUS: "#E8833A", INTERCITY_BUS: "#E8833A",
 };
 
+/** double-tap window: a tap counts as "pick this spot" only if nothing follows it within this time */
+const TAP_MS = 280;
+
 export default function MapView({
-  markers, routes = [], fit, focus, center = [129.07, 35.15], zoom = 11, onSelect, onPick, showLocate = true, className = "", bottomPad = 220,
+  markers, routes = [], fit, fitKey, routeFit, focus, center = [129.07, 35.15], zoom = 11, onSelect, onPick, onUserMove, showLocate = true, className = "", bottomPad = 220,
 }: {
-  markers: MapMarker[]; routes?: RouteFeature[]; fit?: [number, number][] | null; center?: [number, number]; zoom?: number;
+  markers: MapMarker[]; routes?: RouteFeature[]; center?: [number, number]; zoom?: number;
+  /** [lat, lon] points to frame when `fit` itself or `fitKey` changes (bump fitKey to frame the same points again) */
+  fit?: [number, number][] | null; fitKey?: number;
+  /** framed when a route appears; clearing it leaves the view where the user put it */
+  routeFit?: [number, number][] | null;
   focus?: { lat: number; lon: number; zoom?: number; key: string } | null; bottomPad?: number;
   onSelect?: (id: string, kind: MapMarker["kind"]) => void; onPick?: (lat: number, lon: number) => void;
+  /** the user started dragging the map by hand */
+  onUserMove?: () => void;
   showLocate?: boolean; className?: string;
 }) {
   const el = useRef<HTMLDivElement>(null);
@@ -45,11 +54,16 @@ export default function MapView({
   const selRef = useRef(onSelect);
   pickRef.current = onPick;
   selRef.current = onSelect;
+  const moveRef = useRef(onUserMove);
+  moveRef.current = onUserMove;
+  // whichever camera move came last wins, also while the style is still loading
+  const pending = useRef<(() => void) | null>(null);
+  const whenReady = (go: () => void) => { if (loaded.current) go(); else pending.current = go; };
 
   useEffect(() => {
     if (!el.current) return;
     const m = new maplibregl.Map({
-      container: el.current, style: STYLE, maxZoom: 19, center, zoom, maxPitch: 0, pitchWithRotate: false,
+      container: el.current, style: STYLE, minZoom: 5, maxZoom: 19, center, zoom, maxPitch: 0, pitchWithRotate: false,
       dragRotate: false, attributionControl: { compact: true },
     });
     m.touchZoomRotate.disableRotation();
@@ -74,12 +88,33 @@ export default function MapView({
       m.on("zoom", zoomClass);
       zoomClass();
       loaded.current = true;
+      pending.current?.();
+      pending.current = null;
       m.fire("ourtrip:ready");
     });
-    m.on("click", (e) => pickRef.current?.(e.lngLat.lat, e.lngLat.lng));
+    // A tap picks a spot, but only once we know it isn't a double-tap zoom or the start of a drag.
+    let tapTimer: number | undefined;
+    let lastTap = -Infinity;
+    let lastGesture = -Infinity;
+    const cancelTap = () => window.clearTimeout(tapTimer);
+    m.on("click", (e) => {
+      const now = performance.now();
+      const repeated = now - lastTap < TAP_MS || now - lastGesture < TAP_MS;
+      lastTap = now;
+      cancelTap();
+      if (repeated) return;
+      tapTimer = window.setTimeout(() => pickRef.current?.(e.lngLat.lat, e.lngLat.lng), TAP_MS);
+    });
+    const onGesture = (e: { originalEvent?: unknown }) => {
+      if (!e.originalEvent) return; // our own easeTo/fitBounds
+      lastGesture = performance.now();
+      cancelTap();
+    };
+    m.on("dragstart", (e) => { onGesture(e); if (e.originalEvent) moveRef.current?.(); });
+    m.on("zoomstart", onGesture);
     map.current = m;
     (window as unknown as { __otMap?: MLMap }).__otMap = m; // for pin-accuracy checks (E2E)
-    return () => { m.remove(); map.current = null; loaded.current = false; };
+    return () => { cancelTap(); m.remove(); map.current = null; loaded.current = false; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -133,24 +168,33 @@ export default function MapView({
     if (loaded.current) apply(); else m.once("ourtrip:ready", apply);
   }, [routes]);
 
-  useEffect(() => {
+  // Screen space covered by the search bar (top) and cards/sheet (bottom), capped so there is always room left to fit into.
+  // Never pass `padding` to easeTo: MapLibre keeps it on the map and adds it to every later fitBounds.
+  const covered = (m: MLMap) => {
+    const h = m.getContainer().clientHeight;
+    return { top: Math.min(120, h * 0.2), bottom: Math.min(bottomPad, h * 0.6) };
+  };
+  const easeToPoint = (m: MLMap, lat: number, lon: number, zoom: number) => {
+    const { top, bottom } = covered(m);
+    m.easeTo({ center: [lon, lat], zoom, offset: [0, (top - bottom) / 2], duration: 600 });
+  };
+  const frame = (pts?: [number, number][] | null) => {
     const m = map.current;
-    if (!m || !fit || fit.length === 0) return;
-    const go = () => {
-      if (fit.length === 1) { m.easeTo({ center: [fit[0][1], fit[0][0]], zoom: Math.max(m.getZoom(), 15) }); return; }
+    if (!m || !pts || pts.length === 0) return;
+    whenReady(() => {
+      if (pts.length === 1) { easeToPoint(m, pts[0][0], pts[0][1], Math.max(m.getZoom(), 15)); return; }
       const b = new maplibregl.LngLatBounds();
-      fit.forEach(([lat, lon]) => b.extend([lon, lat]));
-      m.fitBounds(b, { padding: { top: 120, bottom: bottomPad, left: 40, right: 40 }, maxZoom: 16, duration: 600 });
-    };
-    if (loaded.current) go(); else m.once("ourtrip:ready", go);
-  }, [fit]);
+      pts.forEach(([lat, lon]) => b.extend([lon, lat]));
+      m.fitBounds(b, { padding: { ...covered(m), left: 40, right: 40 }, maxZoom: 16, duration: 600 });
+    });
+  };
+  useEffect(() => frame(fit), [fit, fitKey]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => frame(routeFit), [routeFit]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     const m = map.current;
     if (!m || !focus) return;
-    const go = () => m.easeTo({ center: [focus.lon, focus.lat], zoom: Math.max(m.getZoom(), focus.zoom ?? 14.5),
-      padding: { top: 100, bottom: bottomPad, left: 0, right: 0 }, duration: 650 });
-    if (loaded.current) go(); else m.once("ourtrip:ready", go);
+    whenReady(() => easeToPoint(m, focus.lat, focus.lon, Math.max(m.getZoom(), focus.zoom ?? 14.5)));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [focus?.key]);
 

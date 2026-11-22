@@ -36,9 +36,9 @@ export default function MapPage() {
   const [detailOpen, setDetailOpen] = useState(false);
   const [q, setQ] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
+  const [fitKey, setFitKey] = useState(0);
+  const [cardsMin, setCardsMin] = useState(false);
   const carousel = useRef<HTMLDivElement>(null);
-
-  useEffect(() => { const p = params.get("place"); if (p) { ui.set({ selectedPlaceId: p }); setDetailOpen(true); } }, [params]); // eslint-disable-line
 
   const memberIdx = useMemo(() => Object.fromEntries((trip?.members ?? []).map((m, i) => [m.id, i])), [trip]);
 
@@ -77,16 +77,24 @@ export default function MapPage() {
   const ambient = useNearby(center?.lat, center?.lon, 500, ui.showStops && !detailOpen);
 
   const select = (p: Place, open = false) => {
+    setCardsMin(false);
     ui.set({ selectedPlaceId: p.id });
     setRoutes([]); setStops([]);
     if (p.has_location) setFocus({ lat: p.latitude!, lon: p.longitude!, key: `${p.id}:${Date.now()}` });
     if (open) setDetailOpen(true);
   };
 
+  // "?place=" links: open the place and move the map to it once places are loaded
+  const placesLoaded = !!places.data;
+  useEffect(() => {
+    const p = places.data?.find((x) => x.id === params.get("place"));
+    if (p) { setAutoWalk(false); select(p, true); }
+  }, [params, placesLoaded]); // eslint-disable-line
+
   useEffect(() => {
     if (!selected || !carousel.current) return;
     carousel.current.querySelector(`[data-card="${selected.id}"]`)?.scrollIntoView({ behavior: "smooth", inline: "start", block: "nearest" });
-  }, [selected?.id]); // eslint-disable-line
+  }, [selected?.id, cardsMin]); // eslint-disable-line
 
   const markers = useMemo<MapMarker[]>(() => {
     const m: MapMarker[] = visible.filter((p) => p.has_location).map((p) => ({
@@ -102,11 +110,14 @@ export default function MapPage() {
   }, [visible, ui.selectedPlaceId, ui.showStops, ui.day, stops, ambient.data, detailOpen, order, quick]);
 
   const fit = useMemo<[number, number][] | null>(() => {
-    if (routes.length) return routes.flatMap((r) => r.geometry.coordinates.map(([x, y]) => [y, x] as [number, number]));
     const pts = visible.filter((p) => p.has_location).map((p) => [p.latitude!, p.longitude!] as [number, number]);
     return pts.length ? pts : null;
+    // Not on every data change: polling or adding a place must not yank the map away from where the user put it.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [routes, ui.city, ui.day, places.data?.length]);
+  }, [ui.city, ui.day, fitKey, !!places.data?.length]);
+  const routeFit = useMemo<[number, number][] | null>(() => (routes.length
+    ? routes.flatMap((r) => r.geometry.coordinates.map(([x, y]) => [y, x] as [number, number])) : null), [routes]);
+  const refit = () => setFitKey((k) => k + 1);
 
   const geo = useMutation({ mutationFn: (text: string) => api.get<{ results: GeoHit[] }>(`/api/geocode/search?${qs({ q: text, city: ui.city === "all" ? undefined : ui.city })}`) });
   const matches = q.trim() ? (places.data ?? []).filter((p) => p.name.toLowerCase().includes(q.trim().toLowerCase())).slice(0, 6) : [];
@@ -116,8 +127,10 @@ export default function MapPage() {
   const cardsVisible = !detailOpen && !quick && !searchOpen;
 
   return (
-    <div className={`fixed inset-0 map-under-nav ${cardsVisible ? "" : "sheet-open"}`}>
-      <MapView markers={markers} routes={routes.length ? routes : dayRoutes} fit={fit} focus={focus} bottomPad={detailOpen ? 420 : 310}
+    <div className={`fixed inset-0 map-under-nav ${cardsVisible ? "" : "sheet-open"} ${cardsMin ? "cards-min" : ""}`}>
+      <MapView markers={markers} routes={routes.length ? routes : dayRoutes} fit={fit} fitKey={fitKey} routeFit={routeFit} focus={focus}
+        bottomPad={detailOpen || quick ? window.innerHeight * 0.58 + 20 : cardsMin ? 150 : 280}
+        onUserMove={() => { setSearchOpen(false); setCardsMin(true); }}
         onSelect={(id, kind) => {
           if (kind === "place") { const p = places.data?.find((x) => x.id === id); if (p) select(p, detailOpen || p.id === ui.selectedPlaceId); }
           if (kind === "pick") setQuick((x) => x);
@@ -172,12 +185,12 @@ export default function MapPage() {
         </div>
         <div className="flex gap-1.5 overflow-x-auto no-scrollbar pointer-events-auto mt-2 max-w-[640px] mx-auto pb-1">
           {(["all", "busan", "gyeongju", "pohang"] as (City | "all")[]).map((c) => (
-            <Chip key={c} on={ui.city === c} onClick={() => ui.set({ city: c, day: "all" })}
+            <Chip key={c} on={ui.city === c} onClick={() => { ui.set({ city: c, day: "all" }); refit(); }}
               dot={c === "all" ? undefined : CITY_COLOR[c]}>{c === "all" ? "전체" : CITY_LABEL[c]}</Chip>
           ))}
           <span className="w-px bg-line mx-0.5 my-1.5 shrink-0" />
           {days.map((d) => (
-            <Chip key={d.id} on={ui.day === d.day_number} onClick={() => ui.set({ day: ui.day === d.day_number ? "all" : d.day_number, city: "all" })}>
+            <Chip key={d.id} on={ui.day === d.day_number} onClick={() => { ui.set({ day: ui.day === d.day_number ? "all" : d.day_number, city: "all" }); refit(); }}>
               DAY {d.day_number}
             </Chip>
           ))}
@@ -203,20 +216,28 @@ export default function MapPage() {
       </div>
 
       {/* bottom: synced place cards */}
-      {cardsVisible && (
-        <div className="absolute inset-x-0 z-10" style={{ bottom: "calc(var(--nav-h) + var(--nav-gap) + var(--sab) + 10px)" }}>
+      {cardsVisible && cardsMin && visible.length > 0 && (
+        <div className="absolute inset-x-0 z-10 flex justify-center pointer-events-none" style={{ bottom: "calc(var(--nav-h) + var(--nav-gap) + var(--sab) + 14px)" }}>
+          <button onClick={() => setCardsMin(false)} aria-label="장소 카드 펼치기"
+            className="pointer-events-auto bg-paper shadow-float rounded-full h-12 px-5 text-[15px] font-bold flex items-center gap-2 active:scale-95 transition-transform">
+            <Icon name="layers" size={18} className="text-coral" />장소 {visible.length}곳 보기
+          </button>
+        </div>
+      )}
+      {cardsVisible && !(cardsMin && visible.length > 0) && (
+        <div className="absolute inset-x-0 z-10 pointer-events-none" style={{ bottom: "calc(var(--nav-h) + var(--nav-gap) + var(--sab) + 10px)" }}>
           {visible.length === 0 ? (
-            <div className="mx-3 bg-paper shadow-float rounded-[22px] p-5 text-[15px] flex items-center gap-3 max-w-[640px] sm:mx-auto">
+            <div className="mx-3 pointer-events-auto bg-paper shadow-float rounded-[22px] p-5 text-[15px] flex items-center gap-3 max-w-[640px] sm:mx-auto">
               <span className="text-2xl">👆</span><span className="flex-1"><b>지도를 눌러 가고 싶은 곳을 추가해요</b><br /><span className="text-muted">검색창에서 이름으로 찾거나 네이버·카카오 링크도 넣을 수 있어요.</span></span>
             </div>
           ) : (
-            <div ref={carousel} className="flex gap-2.5 overflow-x-auto no-scrollbar snap-x-cards px-3 pb-1">
+            <div ref={carousel} className="flex gap-2.5 overflow-x-auto no-scrollbar snap-x-cards px-3 pb-1 pointer-events-auto">
               {visible.map((p) => {
                 const o = order[p.id];
                 const sel = p.id === ui.selectedPlaceId;
                 return (
-                  <div key={p.id} data-card={p.id} role="button" tabIndex={0} aria-label={p.name} onClick={() => (sel ? (setAutoWalk(false), setDetailOpen(true)) : select(p))}
-                    onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); if (sel) { setAutoWalk(false); setDetailOpen(true); } else select(p); } }}
+                  <div key={p.id} data-card={p.id} role="button" tabIndex={0} aria-label={p.name} onClick={() => { if (sel) setAutoWalk(false); select(p, sel); }}
+                    onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); if (sel) setAutoWalk(false); select(p, sel); } }}
                     className={`relative overflow-hidden shrink-0 w-[80vw] max-w-[320px] text-left bg-paper rounded-[20px] p-4 shadow-float transition-all active:scale-[.98] cursor-pointer ${sel ? "ring-2 ring-coral" : ""}`}>
                     <div className="flex gap-3">
                       <span className="w-12 h-12 rounded-[14px] flex items-center justify-center text-xl shrink-0" style={{ background: CITY_COLOR[p.city] + "22" }}>{CATEGORY_ICON[p.category]}</span>
@@ -234,7 +255,7 @@ export default function MapPage() {
                       <span className="ml-auto text-xs font-semibold text-coral flex items-center">{sel ? "자세히" : "보기"}<Icon name="chevronR" size={14} /></span>
                     </div>
                     {p.has_location && (
-                      <button type="button" onClick={(e) => { e.stopPropagation(); ui.set({ selectedPlaceId: p.id }); setAutoWalk(true); setDetailOpen(true); }}
+                      <button type="button" onClick={(e) => { e.stopPropagation(); setAutoWalk(true); select(p, true); }}
                         className="mt-3 w-full h-11 rounded-[12px] bg-coral-soft text-coral-ink text-[14px] font-bold flex items-center justify-center gap-1.5 active:bg-[#C9E2FF]">
                         <Icon name="walk" size={18} stroke={2.4} />걸어서 가는 길
                       </button>
@@ -254,7 +275,9 @@ export default function MapPage() {
       </Sheet>
 
       <QuickAdd init={quick} onClose={() => setQuick(null)} onSaved={(id) => {
-        setQuick(null); ui.set({ selectedPlaceId: id, city: "all", day: "all" }); setDetailOpen(true);
+        // keep the map on the new pin instead of zooming out to everything
+        if (quick) setFocus({ lat: quick.lat, lon: quick.lon, key: `${id}:${Date.now()}` });
+        setQuick(null); setCardsMin(false); ui.set({ selectedPlaceId: id, city: "all", day: "all" }); setDetailOpen(true);
       }} />
 
       <Sheet open={filtersOpen} onClose={() => setFiltersOpen(false)} title="지도 필터">
