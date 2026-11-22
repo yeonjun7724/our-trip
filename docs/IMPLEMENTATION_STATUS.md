@@ -14,7 +14,7 @@
 | 7 | 철도 | ✅ 기록·내일로 / 🔑 시간표 | TAGO 역·시간표·환승 후보 어댑터, 열차 기록(TAGO와 직접 입력 구분), 예매 상태, 내일로 탑승일 경고 |
 | 8 | 통합 일정 | ✅ | 타임라인(도보 OSMnx 추정, 저장한 대중교통 구간, 고정 시각), 열차 연결 판정 6종, NN+2-opt 동선 추천(고정·열차는 위치 유지), 날짜 추천, 모두 승인 후 반영 |
 | 9 | 모바일 완성도 | ✅ | PWA 매니페스트, share_target, SW(앱 셸만 캐시하고 API는 캐시 안 함), 스켈레톤, 빈 상태, 오류 화면, 44px 터치 영역, safe-area, 6개 화면 폭 E2E |
-| 10 | Railway | ✅ | 멀티스테이지 Dockerfile, railway.json 헬스체크, Postgres 연결, 실제 배포와 운영 URL E2E 통과 |
+| 10 | Railway | ✅ | 멀티스테이지 Dockerfile, .railway/railway.ts 헬스체크, Postgres 연결, 실제 배포와 운영 URL E2E 통과 |
 
 ## 하지 않았거나 남은 것
 

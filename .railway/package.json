@@ -1,0 +1,6 @@
+{
+  "name": "our-trip-railway",
+  "private": true,
+  "description": "SDK for railway.ts (railway config plan/apply)",
+  "devDependencies": { "railway": "3.17.0" }
+}

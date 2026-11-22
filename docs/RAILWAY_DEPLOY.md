@@ -43,6 +43,19 @@ railway logs --service web
 컨테이너는 시작할 때 `alembic upgrade head`를 실행한 뒤 uvicorn을 `0.0.0.0:$PORT`에 띄웁니다(`--proxy-headers`).
 헬스체크 경로는 `/api/health`(DB 연결과 그래프 수 확인)입니다. 그래프 파일은 이미지에 포함되어 재시작해도 유지되고, 시작할 때 백그라운드로 로드됩니다.
 
+## 서비스 설정 (Infrastructure as Code)
+
+빌더·헬스체크·재시작 정책은 `.railway/railway.ts`에 있습니다. (`railway.json` 방식은 2026-12-01에 지원이 끝나 2026-11-22에 옮겼습니다.)
+배포(`railway up`)할 때 자동으로 읽히지 않으므로, 이 파일을 고쳤을 때만 직접 적용합니다. 적용하면 web이 재배포됩니다.
+
+```bash
+cd .railway && npm ci && cd ..
+railway config plan      # 미리보기. "0 to destroy"인지 확인
+railway config apply
+```
+
+`export const partial = "web"`은 지우지 마세요. 없으면 파일에 적지 않은 Postgres와 볼륨이 삭제 대상이 됩니다. 환경 변수는 이 파일에서 관리하지 않습니다.
+
 ## GitHub
 
 공개 저장소: https://github.com/yeonjun7724/our-trip (branch `main`)
