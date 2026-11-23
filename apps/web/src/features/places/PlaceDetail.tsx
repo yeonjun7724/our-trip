@@ -238,7 +238,7 @@ export function PlaceTitle({ place }: { place: Place }) {
   return (
     <span className="flex items-center gap-3 min-w-0">
       <span className="w-11 h-11 rounded-2xl flex items-center justify-center text-[22px] shrink-0" style={{ background: tint + "22" }}>
-        {({ ATTRACTION: "📸", CAFE: "☕", FOOD: "🍜", LODGING: "🛏️", SHOPPING: "🛍️", STATION: "🚉" } as Record<string, string>)[place.category] ?? "📍"}
+        {({ ATTRACTION: "🏞️", CAFE: "☕", FOOD: "🍜", LODGING: "🛏️", SHOPPING: "🛍️", STATION: "🚉" } as Record<string, string>)[place.category] ?? "📍"}
       </span>
       <span className="min-w-0 flex flex-col">
         <span className="truncate text-[19px] leading-tight">{place.name}{place.both_want ? " 💕" : ""}</span>
